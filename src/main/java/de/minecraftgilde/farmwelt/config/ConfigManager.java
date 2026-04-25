@@ -98,7 +98,12 @@ public final class ConfigManager {
             return null;
         }
 
-        String type = teleportSection.getString("type", "command");
+        String type = teleportSection.getString("type");
+        if (type == null || type.isBlank()) {
+            plugin.getLogger().warning("Farmwelt-Eintrag '" + key + "' hat keinen Teleport-Typ und wird übersprungen.");
+            return null;
+        }
+
         if (!"command".equalsIgnoreCase(type)) {
             plugin.getLogger().warning("Farmwelt-Eintrag '" + key + "' nutzt einen nicht unterstützten Teleport-Typ und wird übersprungen: " + type);
             return null;
@@ -106,8 +111,14 @@ public final class ConfigManager {
 
         String sender = teleportSection.getString("sender", "player");
         if (sender == null || sender.isBlank()) {
-            plugin.getLogger().warning("Farmwelt-Eintrag '" + key + "' hat keinen Teleport-Absender und wird übersprungen.");
-            return null;
+            plugin.getLogger().warning("Farmwelt-Eintrag '" + key + "' hat keinen Teleport-Absender. Es wird 'player' verwendet.");
+            sender = "player";
+        }
+
+        String normalizedSender = sender.toLowerCase(Locale.ROOT);
+        if (!"player".equals(normalizedSender) && !"console".equals(normalizedSender)) {
+            plugin.getLogger().warning("Farmwelt-Eintrag '" + key + "' nutzt einen unbekannten Teleport-Absender. Es wird 'player' verwendet: " + sender);
+            normalizedSender = "player";
         }
 
         String command = teleportSection.getString("command");
@@ -118,7 +129,7 @@ public final class ConfigManager {
 
         return new TeleportAction(
                 type.toLowerCase(Locale.ROOT),
-                sender.toLowerCase(Locale.ROOT),
+                normalizedSender,
                 command
         );
     }
