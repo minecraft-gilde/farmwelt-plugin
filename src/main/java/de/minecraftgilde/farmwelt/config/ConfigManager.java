@@ -121,6 +121,10 @@ public final class ConfigManager {
         return "enforce".equalsIgnoreCase(resourceMonitorMode);
     }
 
+    public String getResourceMonitorMode() {
+        return resourceMonitorMode == null ? "" : resourceMonitorMode;
+    }
+
     public boolean isMonitoredWorld(String worldName) {
         return monitoredWorlds.contains(worldName);
     }
@@ -179,6 +183,10 @@ public final class ConfigManager {
 
     public String getViolationActionContent(ViolationAction action) {
         return getViolationActionConfig(action).content();
+    }
+
+    public String getViolationActionActionbarContent(ViolationAction action) {
+        return getViolationActionConfig(action).actionbarContent();
     }
 
     private FarmweltMenuItem loadFarmweltMenuItem(String key, ConfigurationSection section) {
@@ -342,7 +350,8 @@ public final class ConfigManager {
                 section.getBoolean("enabled", defaults.enabled()),
                 Math.max(1, section.getInt("after-blocks", defaults.afterBlocks())),
                 Math.max(0, section.getInt("cooldown-seconds", defaults.cooldownSeconds())),
-                section.getString(contentKey, defaults.content())
+                section.getString(contentKey, defaults.content()),
+                section.getString("actionbar-message", defaults.actionbarContent())
         );
     }
 
@@ -352,31 +361,36 @@ public final class ConfigManager {
                 true,
                 5,
                 60,
-                "&eBitte nutze fuer Ressourcen die Farmwelten mit &6/farmwelt&e."
+                "&eBitte nutze fuer Ressourcen die Farmwelten mit &6/farmwelt&e.",
+                ""
         ));
         defaults.put(ViolationAction.NOTIFY_STAFF, new ViolationActionConfig(
                 true,
                 10,
                 60,
-                "&e[Farmwelt] &f{player} baut Ressourcen in &7{world} &fbei &7{x} {y} {z} &fab. Verstoesse im Zeitfenster: &c{count}&f. Kategorie: &7{category}"
+                "&e[Farmwelt] &f{player} baut Ressourcen in &7{world} &fbei &7{x} {y} {z} &fab. Verstoesse im Zeitfenster: &c{count}&f. Kategorie: &7{category}",
+                ""
         ));
         defaults.put(ViolationAction.CANCEL_BREAK, new ViolationActionConfig(
-                false,
+                true,
                 15,
-                0,
-                "&cDieser Ressourcenabbau ist in der Hauptwelt nicht erlaubt. Nutze /farmwelt."
+                10,
+                "&cDer Ressourcenabbau in dieser Welt ist jetzt blockiert. Bitte nutze die Farmwelten mit &e/farmwelt&c.",
+                "&cRessourcenabbau blockiert! Nutze &e/farmwelt&c."
         ));
         defaults.put(ViolationAction.KICK, new ViolationActionConfig(
                 false,
                 25,
                 0,
-                "Bitte nutze fuer Ressourcen die Farmwelten: /farmwelt"
+                "Bitte nutze fuer Ressourcen die Farmwelten: /farmwelt",
+                ""
         ));
         defaults.put(ViolationAction.JAIL, new ViolationActionConfig(
                 false,
                 40,
                 0,
-                "jail {player} farmwelt"
+                "jail {player} farmwelt",
+                ""
         ));
         return Collections.unmodifiableMap(defaults);
     }
@@ -455,7 +469,8 @@ public final class ConfigManager {
             boolean enabled,
             int afterBlocks,
             int cooldownSeconds,
-            String content
+            String content,
+            String actionbarContent
     ) {
     }
 }

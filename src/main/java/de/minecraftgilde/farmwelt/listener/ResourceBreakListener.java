@@ -44,9 +44,16 @@ public final class ResourceBreakListener implements Listener {
         this.violationService = violationService;
     }
 
-    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onBlockBreak(BlockBreakEvent event) {
         if (!configManager.isResourceMonitorEnabled()) {
+            return;
+        }
+
+        boolean auditMode = configManager.isResourceMonitorAuditMode();
+        boolean warnMode = configManager.isResourceMonitorWarnMode();
+        boolean enforceMode = configManager.isResourceMonitorEnforceMode();
+        if (!auditMode && !warnMode && !enforceMode) {
             return;
         }
 
@@ -84,11 +91,16 @@ public final class ResourceBreakListener implements Listener {
             return;
         }
 
-        boolean warnActionsEnabled = configManager.isResourceMonitorWarnMode()
-                || configManager.isResourceMonitorEnforceMode();
-        ViolationResult violationResult = violationService.registerViolation(player, block, match, warnActionsEnabled);
+        boolean warnActionsEnabled = warnMode || enforceMode;
+        ViolationResult violationResult = violationService.registerViolation(
+                player,
+                block,
+                match,
+                warnActionsEnabled,
+                enforceMode
+        );
 
-        if (configManager.isResourceMonitorAuditMode()) {
+        if (auditMode) {
             if (shouldEmitAudit(player.getUniqueId(), match.material(), match.category())) {
                 messageService.sendResourceAudit(player, block, match);
             }
@@ -116,7 +128,26 @@ public final class ResourceBreakListener implements Listener {
                         violationService.getWindowSeconds()
                 );
             }
+
+            if (enforceMode && shouldCancelBreak(violationResult)) {
+                event.setCancelled(true);
+                if (violationResult.shouldRun(ViolationAction.CANCEL_BREAK)) {
+                    messageService.sendViolationCancelBreak(
+                            player,
+                            violationResult.snapshot(),
+                            configManager.getViolationActionContent(ViolationAction.CANCEL_BREAK),
+                            configManager.getViolationActionActionbarContent(ViolationAction.CANCEL_BREAK),
+                            violationService.getWindowSeconds()
+                    );
+                }
+            }
         }
+    }
+
+    private boolean shouldCancelBreak(ViolationResult violationResult) {
+        return configManager.isViolationActionEnabled(ViolationAction.CANCEL_BREAK)
+                && violationResult.snapshot().currentCount()
+                >= configManager.getViolationActionAfterBlocks(ViolationAction.CANCEL_BREAK);
     }
 
     private boolean shouldEmitAudit(UUID playerId, Material material, String category) {

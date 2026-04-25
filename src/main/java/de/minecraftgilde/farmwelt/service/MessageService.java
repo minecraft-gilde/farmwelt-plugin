@@ -69,6 +69,22 @@ public final class MessageService {
         }
     }
 
+    public void sendViolationCancelBreak(
+            Player player,
+            ViolationSnapshot snapshot,
+            String message,
+            String actionbarMessage,
+            int windowSeconds
+    ) {
+        if (message != null && !message.isBlank()) {
+            player.sendMessage(LEGACY_AMPERSAND.deserialize(replaceViolationPlaceholders(message, player, snapshot, windowSeconds)));
+        }
+
+        if (actionbarMessage != null && !actionbarMessage.isBlank()) {
+            player.sendActionBar(LEGACY_AMPERSAND.deserialize(replaceViolationPlaceholders(actionbarMessage, player, snapshot, windowSeconds)));
+        }
+    }
+
     private String createConsoleAuditMessage(Player player, Block block, ResourceMatch match) {
         return "[Audit] Spieler " + player.getName()
                 + " (" + player.getUniqueId() + ") hat "

@@ -1,6 +1,8 @@
 package de.minecraftgilde.farmwelt.command;
 
+import de.minecraftgilde.farmwelt.config.ConfigManager;
 import de.minecraftgilde.farmwelt.gui.FarmweltMenu;
+import de.minecraftgilde.farmwelt.model.ViolationAction;
 import de.minecraftgilde.farmwelt.model.ViolationSnapshot;
 import de.minecraftgilde.farmwelt.service.ClaimProtectionService;
 import de.minecraftgilde.farmwelt.service.ViolationService;
@@ -18,15 +20,18 @@ public final class FarmweltCommand implements BasicCommand {
     private final FarmweltMenu farmweltMenu;
     private final ClaimProtectionService claimProtectionService;
     private final ViolationService violationService;
+    private final ConfigManager configManager;
 
     public FarmweltCommand(
             FarmweltMenu farmweltMenu,
             ClaimProtectionService claimProtectionService,
-            ViolationService violationService
+            ViolationService violationService,
+            ConfigManager configManager
     ) {
         this.farmweltMenu = farmweltMenu;
         this.claimProtectionService = claimProtectionService;
         this.violationService = violationService;
+        this.configManager = configManager;
     }
 
     @Override
@@ -132,6 +137,7 @@ public final class FarmweltCommand implements BasicCommand {
         player.sendMessage("Verstoesse im aktuellen Zeitfenster: " + snapshot.currentCount());
         player.sendMessage("Zeitfenster: " + violationService.getWindowSeconds() + " Sekunden");
         player.sendMessage("Verbleibende Zeit: " + violationService.getRemainingWindowSeconds(snapshot) + " Sekunden");
+        sendViolationThresholds(player, snapshot.currentCount());
         player.sendMessage("Letzter Block: " + snapshot.latestBlock().name());
         player.sendMessage("Kategorie: " + snapshot.latestCategory());
         player.sendMessage("Letzte Position: " + snapshot.latestWorld()
@@ -147,7 +153,22 @@ public final class FarmweltCommand implements BasicCommand {
 
         player.sendMessage("Verstoesse im aktuellen Zeitfenster: 0");
         player.sendMessage("Zeitfenster: " + violationService.getWindowSeconds() + " Sekunden");
+        sendViolationThresholds(player, 0);
         player.sendMessage("Es wurde keine aktuelle Ressource erfasst.");
+    }
+
+    private void sendViolationThresholds(Player player, int currentCount) {
+        player.sendMessage("Warn-Schwelle: " + configManager.getViolationActionAfterBlocks(ViolationAction.WARNING));
+        player.sendMessage("Staff-Schwelle: " + configManager.getViolationActionAfterBlocks(ViolationAction.NOTIFY_STAFF));
+        player.sendMessage("Blockier-Schwelle: " + configManager.getViolationActionAfterBlocks(ViolationAction.CANCEL_BREAK));
+        player.sendMessage("Blockieren aktiv: " + yesNo(isCancelBreakActive(currentCount)));
+        player.sendMessage("Modus: " + configManager.getResourceMonitorMode());
+    }
+
+    private boolean isCancelBreakActive(int currentCount) {
+        return configManager.isResourceMonitorEnforceMode()
+                && configManager.isViolationActionEnabled(ViolationAction.CANCEL_BREAK)
+                && currentCount >= configManager.getViolationActionAfterBlocks(ViolationAction.CANCEL_BREAK);
     }
 
     private String yesNo(boolean value) {

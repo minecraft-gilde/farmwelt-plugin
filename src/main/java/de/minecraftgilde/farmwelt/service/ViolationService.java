@@ -27,6 +27,7 @@ public final class ViolationService {
     private final long windowMillis;
     private final ActionConfig warningConfig;
     private final ActionConfig staffNotifyConfig;
+    private final ActionConfig cancelBreakConfig;
 
     public ViolationService(ConfigManager configManager) {
         this.windowSeconds = configManager.getViolationWindowSeconds();
@@ -41,9 +42,20 @@ public final class ViolationService {
                 configManager.getViolationActionAfterBlocks(ViolationAction.NOTIFY_STAFF),
                 configManager.getViolationActionCooldownSeconds(ViolationAction.NOTIFY_STAFF)
         );
+        this.cancelBreakConfig = new ActionConfig(
+                configManager.isViolationActionEnabled(ViolationAction.CANCEL_BREAK),
+                configManager.getViolationActionAfterBlocks(ViolationAction.CANCEL_BREAK),
+                configManager.getViolationActionCooldownSeconds(ViolationAction.CANCEL_BREAK)
+        );
     }
 
-    public ViolationResult registerViolation(Player player, Block block, ResourceMatch match, boolean runWarnActions) {
+    public ViolationResult registerViolation(
+            Player player,
+            Block block,
+            ResourceMatch match,
+            boolean runWarnActions,
+            boolean runCancelActions
+    ) {
         UUID playerId = player.getUniqueId();
         Instant now = Instant.now();
         String worldName = block.getWorld().getName();
@@ -61,6 +73,7 @@ public final class ViolationService {
             Instant windowStart = startNewWindow ? now : existingRecord.windowStart();
             Instant lastWarningTime = existingRecord == null ? null : existingRecord.lastWarningTime();
             Instant lastStaffNotifyTime = existingRecord == null ? null : existingRecord.lastStaffNotifyTime();
+            Instant lastCancelBreakTime = existingRecord == null ? null : existingRecord.lastCancelBreakTime();
             EnumSet<ViolationAction> actions = EnumSet.noneOf(ViolationAction.class);
 
             if (runWarnActions && shouldRunAction(warningConfig, count, lastWarningTime, now)) {
@@ -71,6 +84,11 @@ public final class ViolationService {
             if (runWarnActions && shouldRunAction(staffNotifyConfig, count, lastStaffNotifyTime, now)) {
                 actions.add(ViolationAction.NOTIFY_STAFF);
                 lastStaffNotifyTime = now;
+            }
+
+            if (runCancelActions && shouldRunAction(cancelBreakConfig, count, lastCancelBreakTime, now)) {
+                actions.add(ViolationAction.CANCEL_BREAK);
+                lastCancelBreakTime = now;
             }
 
             ViolationRecord newRecord = new ViolationRecord(
@@ -85,7 +103,8 @@ public final class ViolationService {
                     material,
                     category,
                     lastWarningTime,
-                    lastStaffNotifyTime
+                    lastStaffNotifyTime,
+                    lastCancelBreakTime
             );
             updatedRecord.set(newRecord);
             actionsToRun.set(actions.isEmpty() ? Set.of() : Collections.unmodifiableSet(EnumSet.copyOf(actions)));

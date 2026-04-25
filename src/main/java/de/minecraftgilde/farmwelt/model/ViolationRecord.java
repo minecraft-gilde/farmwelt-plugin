@@ -16,7 +16,8 @@ public record ViolationRecord(
         Material latestBlock,
         String latestCategory,
         Instant lastWarningTime,
-        Instant lastStaffNotifyTime
+        Instant lastStaffNotifyTime,
+        Instant lastCancelBreakTime
 ) {
     public ViolationSnapshot toSnapshot() {
         return new ViolationSnapshot(

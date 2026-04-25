@@ -36,9 +36,6 @@ public final class FarmweltPlugin extends JavaPlugin {
         resourceDetectionService = new ResourceDetectionService(configManager);
         messageService = new MessageService(this, configManager);
         violationService = new ViolationService(configManager);
-        if (configManager.isResourceMonitorEnforceMode()) {
-            getLogger().warning("Enforce-Modus ist konfiguriert, aber Blockieren/Kick/Jail sind noch nicht implementiert. Verhalten entspricht aktuell warn.");
-        }
         registerCommand();
         getServer().getPluginManager().registerEvents(new FarmweltGuiListener(teleportService), this);
         getServer().getPluginManager().registerEvents(
@@ -58,7 +55,7 @@ public final class FarmweltPlugin extends JavaPlugin {
         registerCommand(
                 "farmwelt",
                 "Öffnet die Farmwelt-Auswahl.",
-                new FarmweltCommand(farmweltMenu, claimProtectionService, violationService)
+                new FarmweltCommand(farmweltMenu, claimProtectionService, violationService, configManager)
         );
     }
 }
