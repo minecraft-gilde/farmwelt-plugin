@@ -1,13 +1,13 @@
 package de.minecraftgilde.farmwelt.command;
 
 import de.minecraftgilde.farmwelt.gui.FarmweltMenu;
-import org.bukkit.command.Command;
-import org.bukkit.command.CommandExecutor;
+import io.papermc.paper.command.brigadier.BasicCommand;
+import io.papermc.paper.command.brigadier.CommandSourceStack;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.Nullable;
 
-public final class FarmweltCommand implements CommandExecutor {
+public final class FarmweltCommand implements BasicCommand {
 
     private final FarmweltMenu farmweltMenu;
 
@@ -16,23 +16,18 @@ public final class FarmweltCommand implements CommandExecutor {
     }
 
     @Override
-    public boolean onCommand(
-            @NotNull CommandSender sender,
-            @NotNull Command command,
-            @NotNull String label,
-            @NotNull String[] args
-    ) {
+    public void execute(CommandSourceStack source, String[] args) {
+        CommandSender sender = source.getSender();
         if (!(sender instanceof Player player)) {
-            sender.sendMessage("Dieser Befehl kann nur von Spielern ausgefuehrt werden.");
-            return true;
-        }
-
-        if (!player.hasPermission("farmwelt.use")) {
-            player.sendMessage("Du hast keine Berechtigung, die Farmwelt-GUI zu oeffnen.");
-            return true;
+            sender.sendMessage("Dieser Befehl kann nur von Spielern ausgeführt werden.");
+            return;
         }
 
         farmweltMenu.open(player);
-        return true;
+    }
+
+    @Override
+    public @Nullable String permission() {
+        return "farmwelt.use";
     }
 }

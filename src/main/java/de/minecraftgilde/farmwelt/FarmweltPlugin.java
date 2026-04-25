@@ -4,7 +4,6 @@ import de.minecraftgilde.farmwelt.command.FarmweltCommand;
 import de.minecraftgilde.farmwelt.config.ConfigManager;
 import de.minecraftgilde.farmwelt.gui.FarmweltMenu;
 import de.minecraftgilde.farmwelt.listener.FarmweltGuiListener;
-import org.bukkit.command.PluginCommand;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public final class FarmweltPlugin extends JavaPlugin {
@@ -32,12 +31,10 @@ public final class FarmweltPlugin extends JavaPlugin {
     }
 
     private void registerCommand() {
-        PluginCommand command = getCommand("farmwelt");
-        if (command == null) {
-            getLogger().severe("Der Befehl /farmwelt ist nicht in der paper-plugin.yml registriert.");
-            return;
-        }
-
-        command.setExecutor(new FarmweltCommand(farmweltMenu));
+        registerCommand(
+                "farmwelt",
+                "Öffnet die Farmwelt-Auswahl.",
+                new FarmweltCommand(farmweltMenu)
+        );
     }
 }

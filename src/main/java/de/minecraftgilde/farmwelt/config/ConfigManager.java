@@ -11,7 +11,9 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 public final class ConfigManager {
 
-    public static final int FARMWELT_MENU_SIZE = 27;
+    public static final int FARMWELT_MENU_SIZE = 45;
+    public static final int FARMWELT_MENU_CONTENT_SIZE = 27;
+    public static final int FARMWELT_MENU_CONTENT_OFFSET = 9;
 
     private final JavaPlugin plugin;
     private List<FarmweltMenuItem> farmweltMenuItems = List.of();
@@ -32,7 +34,7 @@ public final class ConfigManager {
         for (String key : section.getKeys(false)) {
             ConfigurationSection farmworldSection = section.getConfigurationSection(key);
             if (farmworldSection == null) {
-                plugin.getLogger().warning("Farmwelt-Eintrag '" + key + "' ist kein gueltiger Config-Bereich.");
+                plugin.getLogger().warning("Farmwelt-Eintrag '" + key + "' ist kein gültiger Config-Bereich.");
                 continue;
             }
 
@@ -56,26 +58,26 @@ public final class ConfigManager {
 
         String displayName = section.getString("display-name");
         if (displayName == null || displayName.isBlank()) {
-            plugin.getLogger().warning("Farmwelt-Eintrag '" + key + "' hat keinen Anzeigenamen und wird uebersprungen.");
+            plugin.getLogger().warning("Farmwelt-Eintrag '" + key + "' hat keinen Anzeigenamen und wird übersprungen.");
             return null;
         }
 
         String iconName = section.getString("icon");
         Material icon = iconName == null ? null : Material.matchMaterial(iconName.toUpperCase(Locale.ROOT));
         if (icon == null || !icon.isItem()) {
-            plugin.getLogger().warning("Farmwelt-Eintrag '" + key + "' hat ein ungueltiges Icon und wird uebersprungen: " + iconName);
+            plugin.getLogger().warning("Farmwelt-Eintrag '" + key + "' hat ein ungültiges Icon und wird übersprungen: " + iconName);
             return null;
         }
 
         int slot = section.getInt("slot", -1);
-        if (slot < 0 || slot >= FARMWELT_MENU_SIZE) {
-            plugin.getLogger().warning("Farmwelt-Eintrag '" + key + "' hat einen Slot ausserhalb der GUI und wird uebersprungen: " + slot);
+        if (slot < 0 || slot >= FARMWELT_MENU_CONTENT_SIZE) {
+            plugin.getLogger().warning("Farmwelt-Eintrag '" + key + "' hat einen Slot außerhalb der GUI und wird übersprungen: " + slot);
             return null;
         }
 
         String worldName = section.getString("world");
         if (worldName == null || worldName.isBlank()) {
-            plugin.getLogger().warning("Farmwelt-Eintrag '" + key + "' hat keine Zielwelt und wird uebersprungen.");
+            plugin.getLogger().warning("Farmwelt-Eintrag '" + key + "' hat keine Zielwelt und wird übersprungen.");
             return null;
         }
 

@@ -4,10 +4,6 @@ main: de.minecraftgilde.farmwelt.FarmweltPlugin
 api-version: "1.21"
 folia-supported: true
 description: Farmwelt-System für den Minecraft-Gilde-Server.
-commands:
-  farmwelt:
-    description: Oeffnet die Farmwelt-Auswahl.
-    usage: /farmwelt
 permissions:
   farmwelt.use:
     description: Darf /farmwelt verwenden.

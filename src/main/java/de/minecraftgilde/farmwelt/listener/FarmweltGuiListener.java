@@ -27,11 +27,12 @@ public final class FarmweltGuiListener implements Listener {
 
         FarmweltMenuItem menuItem = holder.getMenuItem(event.getSlot());
         if (menuItem == null) {
+            holder.handleClick(event.getSlot(), event.getWhoClicked());
             return;
         }
 
         event.getWhoClicked().sendMessage("Du hast die Farmwelt \"" + menuItem.displayName()
-                + "\" ausgewaehlt. Der Teleport wird spaeter implementiert.");
+                + "\" ausgewählt. Der Teleport wird später implementiert.");
     }
 
     @EventHandler
