@@ -31,8 +31,8 @@ public final class FarmweltGuiListener implements Listener {
             return;
         }
 
-        event.getWhoClicked().sendMessage("Du hast die Farmwelt \"" + menuItem.displayName()
-                + "\" ausgewählt. Der Teleport wird später implementiert.");
+        event.getWhoClicked().sendMessage("Du hast \"" + menuItem.displayName()
+                + "\" ausgewählt. Geplanter Befehl: " + menuItem.teleportAction().command());
     }
 
     @EventHandler

@@ -4,6 +4,16 @@ main: de.minecraftgilde.farmwelt.FarmweltPlugin
 api-version: "1.21"
 folia-supported: true
 description: Farmwelt-System für den Minecraft-Gilde-Server.
+dependencies:
+  server:
+    BetterRTP:
+      load: BEFORE
+      required: false
+      join-classpath: false
+    GriefPrevention:
+      load: BEFORE
+      required: false
+      join-classpath: false
 permissions:
   farmwelt.use:
     description: Darf /farmwelt verwenden.

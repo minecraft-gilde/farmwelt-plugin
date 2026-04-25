@@ -40,7 +40,7 @@ In der GUI werden Farmwelten durch Items symbolisiert:
 - Netherfarm: `NETHERRACK`
 - Endfarm: `END_STONE`
 
-Beim Klick auf ein Item wird der Spieler zur konfigurierten Zielposition teleportiert.
+Beim Klick auf ein Item soll später die pro Farmwelt konfigurierte Teleport-Aktion ausgeführt werden.
 
 Die GUI soll über die Config steuerbar sein:
 
@@ -48,9 +48,43 @@ Die GUI soll über die Config steuerbar sein:
 - Icon/Material
 - Slot
 - Lore
-- Zielwelt
-- X/Y/Z
-- Yaw/Pitch
+- Teleport-Typ
+- Befehlsausführer
+- Teleport-Befehl
+
+Das interne Datenmodell für einen Farmwelt-Eintrag soll diese Struktur abbilden:
+
+```text
+FarmweltMenuItem
+ ├─ id
+ ├─ displayName
+ ├─ icon
+ ├─ slot
+ ├─ lore
+ └─ teleportAction
+     ├─ type
+     ├─ sender
+     └─ command
+```
+
+### BetterRTP-Integration
+
+Der Teleport in Farmwelten soll standardmäßig über BetterRTP erfolgen.
+
+Das Plugin soll keine eigene Random-Teleport-Logik implementieren. Stattdessen wird pro Farmwelt ein konfigurierbarer Befehl aus der Config vorbereitet.
+
+Beispiele:
+
+- `betterrtp:rtp world Farmwelt`
+- `betterrtp:rtp world Netherfarm`
+- `betterrtp:rtp world Endfarm`
+
+Der Befehlsausführer soll konfigurierbar sein:
+
+- `player`
+- optional später `console`
+
+BetterRTP ist keine harte Compile-Abhängigkeit, solange das Plugin nur Befehle vorbereitet bzw. ausführt. Wenn BetterRTP nicht installiert ist, darf das Plugin nicht hart abstürzen.
 
 ## Funktionsbereich 2: Ressourcenabbau-Erkennung
 
@@ -63,6 +97,21 @@ Farmwelten und andere Ausnahmewelten sollen ignoriert werden.
 Spieler mit Bypass-Permission sollen ignoriert werden.
 
 Es soll zwei getrennte Ressourcenkategorien geben.
+
+### GriefPrevention-Integration
+
+Der Ressourcenmonitor soll auf Grundstücken bzw. Claims nicht greifen.
+
+Wenn ein Block innerhalb eines GriefPrevention-Claims abgebaut wird, soll dieser Abbau vollständig ignoriert werden. Die Prüfung muss vor der eigentlichen Ressourcenbewertung erfolgen.
+
+GriefPrevention ist als optionale Hook-Integration geplant. Wenn die Hook in der Config aktiviert ist, GriefPrevention aber nicht geladen ist, soll der Ressourcenmonitor sicherheitshalber deaktiviert oder mit Warnung nicht aktiviert werden.
+
+Standardverhalten:
+
+- `fail-mode: disable-monitor`
+- `skip-inside-claims: true`
+
+GriefPrevention darf keine harte Pflichtabhängigkeit sein. Das Plugin muss auch ohne GriefPrevention starten können.
 
 ### Oberirdische Ressourcen
 
@@ -147,47 +196,47 @@ farmworlds:
     display-name: "Farmwelt"
     icon: GRASS_BLOCK
     slot: 11
-    world: farmwelt
-    x: 0.5
-    y: 80
-    z: 0.5
-    yaw: 0
-    pitch: 0
     lore:
       - "Normale Farmwelt"
       - "Für Holz, Sand, Erde und weitere Ressourcen"
+    teleport:
+      type: command
+      sender: player
+      command: "betterrtp:rtp world Farmwelt"
 
   nether:
     enabled: true
     display-name: "Netherfarm"
     icon: NETHERRACK
     slot: 13
-    world: netherfarm
-    x: 0.5
-    y: 80
-    z: 0.5
-    yaw: 0
-    pitch: 0
     lore:
       - "Farmwelt für Nether-Ressourcen"
+    teleport:
+      type: command
+      sender: player
+      command: "betterrtp:rtp world Netherfarm"
 
   end:
     enabled: true
     display-name: "Endfarm"
     icon: END_STONE
     slot: 15
-    world: endfarm
-    x: 0.5
-    y: 80
-    z: 0.5
-    yaw: 0
-    pitch: 0
     lore:
       - "Farmwelt für End-Ressourcen"
+    teleport:
+      type: command
+      sender: player
+      command: "betterrtp:rtp world Endfarm"
 
 resource-monitor:
   enabled: true
   mode: audit
+
+  claim-protection:
+    enabled: true
+    provider: GriefPrevention
+    skip-inside-claims: true
+    fail-mode: disable-monitor
 
   monitored-worlds:
     - world
@@ -262,16 +311,20 @@ resource-monitor:
     jail:
       after-blocks: 30
       command: "jail {player} farmwelt"
-Permissions
-farmwelt.use
-Darf /farmwelt verwenden.
-farmwelt.bypass
-Wird vom Ressourcenmonitor ignoriert.
-farmwelt.notify
-Erhält Moderator-Benachrichtigungen.
-farmwelt.admin
-Für spätere Admin-Funktionen vorgesehen.
-Gewünschte Code-Struktur
+```
+
+Koordinatenbasierte Teleports sind nicht die primäre Teleportlogik. Falls sie später benötigt werden, sollen sie höchstens als expliziter Fallback ergänzt werden.
+
+## Permissions
+
+- `farmwelt.use`: Darf `/farmwelt` verwenden.
+- `farmwelt.bypass`: Wird vom Ressourcenmonitor ignoriert.
+- `farmwelt.notify`: Erhält Moderator-Benachrichtigungen.
+- `farmwelt.admin`: Für spätere Admin-Funktionen vorgesehen.
+
+## Gewünschte Code-Struktur
+
+```text
 src/main/java/de/minecraftgilde/farmwelt/
  ├─ FarmweltPlugin.java
  ├─ command/
@@ -292,28 +345,58 @@ src/main/java/de/minecraftgilde/farmwelt/
  └─ config/
      └─ ConfigManager.java
 ```
-Technische Anforderungen
-Java-Plugin für Paper/Folia.
-Gradle-Projekt.
-Package: de.minecraftgilde.farmwelt
-Plugin-Name: Farmwelt
-Repository-Name: farmwelt-plugin
-Keine Datenbank in Version 1.
-Keine harte Abhängigkeit von EssentialsX.
-Jail/Kick soll über konfigurierbare Befehle möglich sein.
-Keine hart codierten Weltnamen außer in der Beispiel-Config.
-Konfigurierbare Nachrichten.
-Saubere Fehlerbehandlung, wenn eine konfigurierte Welt nicht existiert.
-Audit-Modus muss vor harten Sanktionen nutzbar sein.
-Kommentare im Code auf Deutsch, falls Kommentare eingefügt werden.
-Entwicklungsreihenfolge
+
+## Technische Anforderungen
+
+- Java-Plugin für Paper/Folia.
+- Gradle-Projekt.
+- Package: `de.minecraftgilde.farmwelt`
+- Plugin-Name: `Farmwelt`
+- Repository-Name: `farmwelt-plugin`
+- Keine Datenbank in Version 1.
+- Keine harte Abhängigkeit von EssentialsX.
+- Keine harte Abhängigkeit von BetterRTP.
+- Keine harte Abhängigkeit von GriefPrevention.
+- Jail/Kick soll über konfigurierbare Befehle möglich sein.
+- Keine hart codierten Weltnamen außer in der Beispiel-Config.
+- Konfigurierbare Nachrichten.
+- Saubere Fehlerbehandlung, wenn eine konfigurierte Welt nicht existiert.
+- Audit-Modus muss vor harten Sanktionen nutzbar sein.
+- Kommentare im Code auf Deutsch, falls Kommentare eingefügt werden.
+
+## Optionale Plugin-Abhängigkeiten
+
+`paper-plugin.yml` soll BetterRTP und GriefPrevention nur als optionale Runtime-Hinweise deklarieren.
+
+- BetterRTP darf nicht required sein.
+- GriefPrevention darf nicht required sein.
+- Das Plugin muss auch ohne diese Plugins starten.
+- Solange nur Befehle genutzt werden, ist kein BetterRTP-Classpath-Zugriff nötig.
+- Solange keine GriefPrevention-API direkt verwendet wird, ist kein GriefPrevention-Classpath-Zugriff nötig.
+
+## Nicht in dieser Phase
+
+In der Vorbereitungsphase werden ausdrücklich nicht umgesetzt:
+
+- eigene Random-Teleport-Logik
+- direkte BetterRTP-API-Nutzung
+- direkte GriefPrevention-API-Nutzung
+- echtes Ausführen des BetterRTP-Befehls
+- BlockBreakEvent-Überwachung
+- Violation-Zähler
+- Kick/Jail-System
+- Datenbank/Persistenz
+
+## Entwicklungsreihenfolge
 
 Die Umsetzung soll schrittweise erfolgen:
 
-Projektgrundlage erstellen.
-/farmwelt-Befehl und GUI bauen.
-Folia-sicheren Teleport-Service bauen.
-Ressourcenmonitor im Audit-Modus bauen.
-Violation-Zähler mit Zeitfenster bauen.
-Warnungen, Blockabbruch und Staff-Benachrichtigung bauen.
-Kick und optionalen Jail-Befehl bauen.
+1. Projektgrundlage erstellen.
+2. `/farmwelt`-Befehl und GUI bauen.
+3. BetterRTP-Command-Teleport vorbereiten.
+4. Folia-sicheren Teleport-Service bauen.
+5. GriefPrevention-Claim-Hook vorbereiten.
+6. Ressourcenmonitor im Audit-Modus bauen.
+7. Violation-Zähler mit Zeitfenster bauen.
+8. Warnungen, Blockabbruch und Staff-Benachrichtigung bauen.
+9. Kick und optionalen Jail-Befehl bauen.

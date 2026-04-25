@@ -4,47 +4,47 @@ farmworlds:
     display-name: "Farmwelt"
     icon: GRASS_BLOCK
     slot: 11
-    world: farmwelt
-    x: 0.5
-    y: 80
-    z: 0.5
-    yaw: 0
-    pitch: 0
     lore:
       - "Normale Farmwelt"
       - "Für Holz, Sand, Erde und weitere Ressourcen"
+    teleport:
+      type: command
+      sender: player
+      command: "betterrtp:rtp world Farmwelt"
 
   nether:
     enabled: true
     display-name: "Netherfarm"
     icon: NETHERRACK
     slot: 13
-    world: netherfarm
-    x: 0.5
-    y: 80
-    z: 0.5
-    yaw: 0
-    pitch: 0
     lore:
       - "Farmwelt für Nether-Ressourcen"
+    teleport:
+      type: command
+      sender: player
+      command: "betterrtp:rtp world Netherfarm"
 
   end:
     enabled: true
     display-name: "Endfarm"
     icon: END_STONE
     slot: 15
-    world: endfarm
-    x: 0.5
-    y: 80
-    z: 0.5
-    yaw: 0
-    pitch: 0
     lore:
       - "Farmwelt für End-Ressourcen"
+    teleport:
+      type: command
+      sender: player
+      command: "betterrtp:rtp world Endfarm"
 
 resource-monitor:
   enabled: true
   mode: audit
+
+  claim-protection:
+    enabled: true
+    provider: GriefPrevention
+    skip-inside-claims: true
+    fail-mode: disable-monitor
 
   monitored-worlds:
     - world

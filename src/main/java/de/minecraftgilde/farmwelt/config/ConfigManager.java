@@ -1,6 +1,7 @@
 package de.minecraftgilde.farmwelt.config;
 
 import de.minecraftgilde.farmwelt.gui.FarmweltMenuItem;
+import de.minecraftgilde.farmwelt.gui.TeleportAction;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -75,9 +76,8 @@ public final class ConfigManager {
             return null;
         }
 
-        String worldName = section.getString("world");
-        if (worldName == null || worldName.isBlank()) {
-            plugin.getLogger().warning("Farmwelt-Eintrag '" + key + "' hat keine Zielwelt und wird übersprungen.");
+        TeleportAction teleportAction = loadTeleportAction(key, section);
+        if (teleportAction == null) {
             return null;
         }
 
@@ -87,12 +87,39 @@ public final class ConfigManager {
                 icon,
                 slot,
                 section.getStringList("lore"),
-                worldName,
-                section.getDouble("x"),
-                section.getDouble("y"),
-                section.getDouble("z"),
-                (float) section.getDouble("yaw"),
-                (float) section.getDouble("pitch")
+                teleportAction
+        );
+    }
+
+    private TeleportAction loadTeleportAction(String key, ConfigurationSection section) {
+        ConfigurationSection teleportSection = section.getConfigurationSection("teleport");
+        if (teleportSection == null) {
+            plugin.getLogger().warning("Farmwelt-Eintrag '" + key + "' hat keine Teleport-Konfiguration und wird übersprungen.");
+            return null;
+        }
+
+        String type = teleportSection.getString("type", "command");
+        if (!"command".equalsIgnoreCase(type)) {
+            plugin.getLogger().warning("Farmwelt-Eintrag '" + key + "' nutzt einen nicht unterstützten Teleport-Typ und wird übersprungen: " + type);
+            return null;
+        }
+
+        String sender = teleportSection.getString("sender", "player");
+        if (sender == null || sender.isBlank()) {
+            plugin.getLogger().warning("Farmwelt-Eintrag '" + key + "' hat keinen Teleport-Absender und wird übersprungen.");
+            return null;
+        }
+
+        String command = teleportSection.getString("command");
+        if (command == null || command.isBlank()) {
+            plugin.getLogger().warning("Farmwelt-Eintrag '" + key + "' hat keinen Teleport-Befehl und wird übersprungen.");
+            return null;
+        }
+
+        return new TeleportAction(
+                type.toLowerCase(Locale.ROOT),
+                sender.toLowerCase(Locale.ROOT),
+                command
         );
     }
 }
