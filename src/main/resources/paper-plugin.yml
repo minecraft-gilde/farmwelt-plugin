@@ -1,0 +1,19 @@
+name: Farmwelt
+version: ${version}
+main: de.minecraftgilde.farmwelt.FarmweltPlugin
+api-version: "1.21"
+folia-supported: true
+description: Farmwelt-System für den Minecraft-Gilde-Server.
+permissions:
+  farmwelt.use:
+    description: Darf /farmwelt verwenden.
+    default: true
+  farmwelt.bypass:
+    description: Wird vom Ressourcenmonitor ignoriert.
+    default: op
+  farmwelt.notify:
+    description: Erhält Moderator-Benachrichtigungen.
+    default: op
+  farmwelt.admin:
+    description: Für spätere Admin-Funktionen vorgesehen.
+    default: op
