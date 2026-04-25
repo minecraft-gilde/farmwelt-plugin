@@ -6,7 +6,7 @@ farmworlds:
     slot: 11
     lore:
       - "Normale Farmwelt"
-      - "Für Holz, Sand, Erde und weitere Ressourcen"
+      - "Fuer Holz, Sand, Erde und weitere Ressourcen"
     teleport:
       type: command
       sender: player
@@ -18,7 +18,7 @@ farmworlds:
     icon: NETHERRACK
     slot: 13
     lore:
-      - "Farmwelt für Nether-Ressourcen"
+      - "Farmwelt fuer Nether-Ressourcen"
     teleport:
       type: command
       sender: player
@@ -30,7 +30,7 @@ farmworlds:
     icon: END_STONE
     slot: 15
     lore:
-      - "Farmwelt für End-Ressourcen"
+      - "Farmwelt fuer End-Ressourcen"
     teleport:
       type: command
       sender: player
@@ -39,13 +39,6 @@ farmworlds:
 resource-monitor:
   enabled: true
   mode: audit
-
-  claim-protection:
-    enabled: true
-    provider: GriefPrevention
-    skip-inside-claims: true
-    fail-mode: disable-monitor
-    ignore-height: true
 
   monitored-worlds:
     - world
@@ -60,63 +53,70 @@ resource-monitor:
   bypass-permission: farmwelt.bypass
   notify-permission: farmwelt.notify
 
-  sea-level:
-    world: 63
-    world_nether: 32
-    world_the_end: 50
+  claim-protection:
+    enabled: true
+    provider: GriefPrevention
+    skip-inside-claims: true
+    fail-mode: disable-monitor
+    ignore-height: true
 
-  violation-window-seconds: 600
+  audit:
+    notify-staff: true
+    log-to-console: true
+    staff-message: "&e[Farmwelt-Audit] &f{player} hat &c{block} &fin &7{world} &fbei &7{x} {y} {z} &fabgebaut. Kategorie: &7{category}"
+    log-cooldown-seconds: 10
 
-  surface-resources:
-    - OAK_LOG
-    - SPRUCE_LOG
-    - BIRCH_LOG
-    - JUNGLE_LOG
-    - ACACIA_LOG
-    - DARK_OAK_LOG
-    - MANGROVE_LOG
-    - CHERRY_LOG
-    - SAND
-    - RED_SAND
-    - GRAVEL
-    - CLAY
+  world-rules:
+    world:
+      type: overworld
+      sea-level: 63
+      surface-resources:
+        - OAK_LOG
+        - SPRUCE_LOG
+        - BIRCH_LOG
+        - JUNGLE_LOG
+        - ACACIA_LOG
+        - DARK_OAK_LOG
+        - MANGROVE_LOG
+        - CHERRY_LOG
+        - SAND
+        - RED_SAND
+        - GRAVEL
+        - CLAY
+      underground-resources:
+        - COAL_ORE
+        - DEEPSLATE_COAL_ORE
+        - IRON_ORE
+        - DEEPSLATE_IRON_ORE
+        - COPPER_ORE
+        - DEEPSLATE_COPPER_ORE
+        - GOLD_ORE
+        - DEEPSLATE_GOLD_ORE
+        - REDSTONE_ORE
+        - DEEPSLATE_REDSTONE_ORE
+        - LAPIS_ORE
+        - DEEPSLATE_LAPIS_ORE
+        - DIAMOND_ORE
+        - DEEPSLATE_DIAMOND_ORE
+        - EMERALD_ORE
+        - DEEPSLATE_EMERALD_ORE
 
-  underground-resources:
-    - COAL_ORE
-    - DEEPSLATE_COAL_ORE
-    - IRON_ORE
-    - DEEPSLATE_IRON_ORE
-    - COPPER_ORE
-    - DEEPSLATE_COPPER_ORE
-    - GOLD_ORE
-    - DEEPSLATE_GOLD_ORE
-    - REDSTONE_ORE
-    - DEEPSLATE_REDSTONE_ORE
-    - LAPIS_ORE
-    - DEEPSLATE_LAPIS_ORE
-    - DIAMOND_ORE
-    - DEEPSLATE_DIAMOND_ORE
-    - EMERALD_ORE
-    - DEEPSLATE_EMERALD_ORE
-    - ANCIENT_DEBRIS
+    world_nether:
+      type: nether
+      resources:
+        - NETHER_QUARTZ_ORE
+        - NETHER_GOLD_ORE
+        - ANCIENT_DEBRIS
+        - GLOWSTONE
+        - SOUL_SAND
+        - SOUL_SOIL
+        - BASALT
+        - BLACKSTONE
 
-  actions:
-    warning:
-      after-blocks: 5
-      message: "Bitte nutze für Ressourcen die Farmwelten mit /farmwelt."
-
-    cancel-break:
-      after-blocks: 8
-      message: "Dieser Ressourcenabbau ist in der Hauptwelt nicht erlaubt. Nutze /farmwelt."
-
-    notify-staff:
-      after-blocks: 10
-      message: "{player} baut Ressourcen in {world} bei {x} {y} {z} ab."
-
-    kick:
-      after-blocks: 18
-      reason: "Bitte nutze für Ressourcen die Farmwelten: /farmwelt"
-
-    jail:
-      after-blocks: 30
-      command: "jail {player} farmwelt"
+    world_the_end:
+      type: end
+      resources:
+        - END_STONE
+        - CHORUS_FLOWER
+        - CHORUS_PLANT
+        - OBSIDIAN

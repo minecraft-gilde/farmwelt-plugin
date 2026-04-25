@@ -2,10 +2,18 @@ package de.minecraftgilde.farmwelt.config;
 
 import de.minecraftgilde.farmwelt.gui.FarmweltMenuItem;
 import de.minecraftgilde.farmwelt.gui.TeleportAction;
+import de.minecraftgilde.farmwelt.model.ResourceWorldRule;
+import de.minecraftgilde.farmwelt.model.ResourceWorldType;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -18,6 +26,17 @@ public final class ConfigManager {
 
     private final JavaPlugin plugin;
     private List<FarmweltMenuItem> farmweltMenuItems = List.of();
+    private boolean resourceMonitorEnabled;
+    private String resourceMonitorMode = "audit";
+    private Set<String> monitoredWorlds = Set.of();
+    private Set<String> ignoredWorlds = Set.of();
+    private String bypassPermission = "farmwelt.bypass";
+    private String notifyPermission = "farmwelt.notify";
+    private boolean auditNotifyStaff = true;
+    private boolean auditLogToConsole = true;
+    private String staffMessage = "&e[Farmwelt-Audit] &f{player} hat &c{block} &fin &7{world} &fbei &7{x} {y} {z} &fabgebaut. Kategorie: &7{category}";
+    private int auditLogCooldownSeconds = 10;
+    private Map<String, ResourceWorldRule> resourceWorldRules = Map.of();
 
     public ConfigManager(JavaPlugin plugin) {
         this.plugin = plugin;
@@ -50,6 +69,81 @@ public final class ConfigManager {
 
     public List<FarmweltMenuItem> getFarmweltMenuItems() {
         return farmweltMenuItems;
+    }
+
+    public void loadResourceMonitorConfig() {
+        ConfigurationSection section = plugin.getConfig().getConfigurationSection("resource-monitor");
+        if (section == null) {
+            resourceMonitorEnabled = false;
+            resourceWorldRules = Map.of();
+            plugin.getLogger().warning("Config-Bereich 'resource-monitor' fehlt. Der Ressourcenmonitor bleibt deaktiviert.");
+            return;
+        }
+
+        resourceMonitorEnabled = section.getBoolean("enabled", false);
+        resourceMonitorMode = section.getString("mode", "audit").toLowerCase(Locale.ROOT);
+        monitoredWorlds = toStringSet(section.getStringList("monitored-worlds"));
+        ignoredWorlds = toStringSet(section.getStringList("ignored-worlds"));
+        bypassPermission = section.getString("bypass-permission", "farmwelt.bypass");
+        notifyPermission = section.getString("notify-permission", "farmwelt.notify");
+
+        ConfigurationSection auditSection = section.getConfigurationSection("audit");
+        if (auditSection != null) {
+            auditNotifyStaff = auditSection.getBoolean("notify-staff", true);
+            auditLogToConsole = auditSection.getBoolean("log-to-console", true);
+            staffMessage = auditSection.getString("staff-message", staffMessage);
+            auditLogCooldownSeconds = Math.max(0, auditSection.getInt("log-cooldown-seconds", 10));
+        }
+
+        resourceWorldRules = loadResourceWorldRules(section.getConfigurationSection("world-rules"));
+    }
+
+    public boolean isResourceMonitorEnabled() {
+        return resourceMonitorEnabled;
+    }
+
+    public boolean isResourceMonitorAuditMode() {
+        return "audit".equalsIgnoreCase(resourceMonitorMode);
+    }
+
+    public boolean isMonitoredWorld(String worldName) {
+        return monitoredWorlds.contains(worldName);
+    }
+
+    public boolean isIgnoredWorld(String worldName) {
+        return ignoredWorlds.contains(worldName);
+    }
+
+    public boolean hasResourceWorldRule(String worldName) {
+        return resourceWorldRules.containsKey(worldName);
+    }
+
+    public Optional<ResourceWorldRule> getResourceWorldRule(String worldName) {
+        return Optional.ofNullable(resourceWorldRules.get(worldName));
+    }
+
+    public String getBypassPermission() {
+        return bypassPermission == null ? "" : bypassPermission;
+    }
+
+    public String getNotifyPermission() {
+        return notifyPermission == null ? "" : notifyPermission;
+    }
+
+    public boolean isAuditNotifyStaff() {
+        return auditNotifyStaff;
+    }
+
+    public boolean isAuditLogToConsole() {
+        return auditLogToConsole;
+    }
+
+    public String getStaffMessage() {
+        return staffMessage == null ? "" : staffMessage;
+    }
+
+    public int getAuditLogCooldownSeconds() {
+        return auditLogCooldownSeconds;
     }
 
     private FarmweltMenuItem loadFarmweltMenuItem(String key, ConfigurationSection section) {
@@ -132,5 +226,89 @@ public final class ConfigManager {
                 normalizedSender,
                 command
         );
+    }
+
+    private Map<String, ResourceWorldRule> loadResourceWorldRules(ConfigurationSection section) {
+        if (section == null) {
+            plugin.getLogger().warning("Config-Bereich 'resource-monitor.world-rules' fehlt. Der Ressourcenmonitor hat keine Weltregeln.");
+            return Map.of();
+        }
+
+        Map<String, ResourceWorldRule> loadedRules = new HashMap<>();
+        for (String worldName : section.getKeys(false)) {
+            ConfigurationSection ruleSection = section.getConfigurationSection(worldName);
+            if (ruleSection == null) {
+                plugin.getLogger().warning("Ressourcenregel fuer Welt '" + worldName + "' ist kein gueltiger Config-Bereich.");
+                continue;
+            }
+
+            ResourceWorldRule rule = loadResourceWorldRule(worldName, ruleSection);
+            if (rule != null) {
+                loadedRules.put(worldName, rule);
+            }
+        }
+
+        return Collections.unmodifiableMap(loadedRules);
+    }
+
+    private ResourceWorldRule loadResourceWorldRule(String worldName, ConfigurationSection section) {
+        String typeName = section.getString("type");
+        Optional<ResourceWorldType> type = ResourceWorldType.fromConfigValue(typeName);
+        if (type.isEmpty()) {
+            plugin.getLogger().warning("Ressourcenregel fuer Welt '" + worldName + "' hat einen ungueltigen Typ: " + typeName);
+            return null;
+        }
+
+        ResourceWorldType worldType = type.get();
+        if (worldType == ResourceWorldType.OVERWORLD) {
+            return new ResourceWorldRule(
+                    worldName,
+                    worldType,
+                    section.getInt("sea-level", 63),
+                    loadMaterialSet("resource-monitor.world-rules." + worldName + ".surface-resources", section.getStringList("surface-resources")),
+                    loadMaterialSet("resource-monitor.world-rules." + worldName + ".underground-resources", section.getStringList("underground-resources")),
+                    Set.of()
+            );
+        }
+
+        return new ResourceWorldRule(
+                worldName,
+                worldType,
+                0,
+                Set.of(),
+                Set.of(),
+                loadMaterialSet("resource-monitor.world-rules." + worldName + ".resources", section.getStringList("resources"))
+        );
+    }
+
+    private Set<Material> loadMaterialSet(String configPath, List<String> materialNames) {
+        EnumSet<Material> materials = EnumSet.noneOf(Material.class);
+        for (String materialName : materialNames) {
+            if (materialName == null || materialName.isBlank()) {
+                continue;
+            }
+
+            String normalizedName = materialName.trim().toUpperCase(Locale.ROOT);
+            Material material = Material.matchMaterial(normalizedName);
+            if (material == null || !material.isBlock()) {
+                plugin.getLogger().warning("Ungueltiges Material in " + configPath + ": " + materialName);
+                continue;
+            }
+
+            materials.add(material);
+        }
+
+        return materials;
+    }
+
+    private Set<String> toStringSet(List<String> values) {
+        Set<String> set = new HashSet<>();
+        for (String value : values) {
+            if (value != null && !value.isBlank()) {
+                set.add(value.trim());
+            }
+        }
+
+        return Collections.unmodifiableSet(set);
     }
 }

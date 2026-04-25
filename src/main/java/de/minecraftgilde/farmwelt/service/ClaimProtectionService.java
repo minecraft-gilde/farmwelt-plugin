@@ -56,6 +56,10 @@ public final class ClaimProtectionService {
         }
     }
 
+    public boolean shouldSkipInsideClaims() {
+        return enabled && skipInsideClaims;
+    }
+
     public String getProviderName() {
         return provider.getName();
     }
@@ -93,7 +97,7 @@ public final class ClaimProtectionService {
         plugin.getLogger().info("Claims werden vom Ressourcenmonitor uebersprungen: " + yesNo(enabled && skipInsideClaims));
 
         if (resourceMonitorWouldBeDisabled) {
-            plugin.getLogger().warning("Der spaetere Ressourcenmonitor wuerde wegen fehlendem Claim-Provider deaktiviert werden.");
+            plugin.getLogger().warning("Der Ressourcenmonitor wird wegen fehlendem Claim-Provider deaktiviert.");
         }
     }
 
