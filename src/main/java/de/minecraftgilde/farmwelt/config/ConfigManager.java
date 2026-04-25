@@ -4,8 +4,10 @@ import de.minecraftgilde.farmwelt.gui.FarmweltMenuItem;
 import de.minecraftgilde.farmwelt.gui.TeleportAction;
 import de.minecraftgilde.farmwelt.model.ResourceWorldRule;
 import de.minecraftgilde.farmwelt.model.ResourceWorldType;
+import de.minecraftgilde.farmwelt.model.ViolationAction;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.EnumMap;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -36,6 +38,8 @@ public final class ConfigManager {
     private boolean auditLogToConsole = true;
     private String staffMessage = "&e[Farmwelt-Audit] &f{player} hat &c{block} &fin &7{world} &fbei &7{x} {y} {z} &fabgebaut. Kategorie: &7{category}";
     private int auditLogCooldownSeconds = 10;
+    private int violationWindowSeconds = 600;
+    private Map<ViolationAction, ViolationActionConfig> violationActionConfigs = Map.of();
     private Map<String, ResourceWorldRule> resourceWorldRules = Map.of();
 
     public ConfigManager(JavaPlugin plugin) {
@@ -76,6 +80,7 @@ public final class ConfigManager {
         if (section == null) {
             resourceMonitorEnabled = false;
             resourceWorldRules = Map.of();
+            violationActionConfigs = createDefaultViolationActionConfigs();
             plugin.getLogger().warning("Config-Bereich 'resource-monitor' fehlt. Der Ressourcenmonitor bleibt deaktiviert.");
             return;
         }
@@ -86,6 +91,7 @@ public final class ConfigManager {
         ignoredWorlds = toStringSet(section.getStringList("ignored-worlds"));
         bypassPermission = section.getString("bypass-permission", "farmwelt.bypass");
         notifyPermission = section.getString("notify-permission", "farmwelt.notify");
+        violationWindowSeconds = Math.max(1, section.getInt("violation-window-seconds", 600));
 
         ConfigurationSection auditSection = section.getConfigurationSection("audit");
         if (auditSection != null) {
@@ -96,6 +102,7 @@ public final class ConfigManager {
         }
 
         resourceWorldRules = loadResourceWorldRules(section.getConfigurationSection("world-rules"));
+        violationActionConfigs = loadViolationActionConfigs(section.getConfigurationSection("actions"));
     }
 
     public boolean isResourceMonitorEnabled() {
@@ -104,6 +111,14 @@ public final class ConfigManager {
 
     public boolean isResourceMonitorAuditMode() {
         return "audit".equalsIgnoreCase(resourceMonitorMode);
+    }
+
+    public boolean isResourceMonitorWarnMode() {
+        return "warn".equalsIgnoreCase(resourceMonitorMode);
+    }
+
+    public boolean isResourceMonitorEnforceMode() {
+        return "enforce".equalsIgnoreCase(resourceMonitorMode);
     }
 
     public boolean isMonitoredWorld(String worldName) {
@@ -144,6 +159,26 @@ public final class ConfigManager {
 
     public int getAuditLogCooldownSeconds() {
         return auditLogCooldownSeconds;
+    }
+
+    public int getViolationWindowSeconds() {
+        return violationWindowSeconds;
+    }
+
+    public boolean isViolationActionEnabled(ViolationAction action) {
+        return getViolationActionConfig(action).enabled();
+    }
+
+    public int getViolationActionAfterBlocks(ViolationAction action) {
+        return getViolationActionConfig(action).afterBlocks();
+    }
+
+    public int getViolationActionCooldownSeconds(ViolationAction action) {
+        return getViolationActionConfig(action).cooldownSeconds();
+    }
+
+    public String getViolationActionContent(ViolationAction action) {
+        return getViolationActionConfig(action).content();
     }
 
     private FarmweltMenuItem loadFarmweltMenuItem(String key, ConfigurationSection section) {
@@ -251,6 +286,110 @@ public final class ConfigManager {
         return Collections.unmodifiableMap(loadedRules);
     }
 
+    private Map<ViolationAction, ViolationActionConfig> loadViolationActionConfigs(ConfigurationSection section) {
+        Map<ViolationAction, ViolationActionConfig> defaults = createDefaultViolationActionConfigs();
+        if (section == null) {
+            return defaults;
+        }
+
+        EnumMap<ViolationAction, ViolationActionConfig> loadedConfigs = new EnumMap<>(ViolationAction.class);
+        loadedConfigs.put(ViolationAction.WARNING, loadViolationActionConfig(
+                section,
+                "warning",
+                defaults.get(ViolationAction.WARNING),
+                "message"
+        ));
+        loadedConfigs.put(ViolationAction.NOTIFY_STAFF, loadViolationActionConfig(
+                section,
+                "notify-staff",
+                defaults.get(ViolationAction.NOTIFY_STAFF),
+                "message"
+        ));
+        loadedConfigs.put(ViolationAction.CANCEL_BREAK, loadViolationActionConfig(
+                section,
+                "cancel-break",
+                defaults.get(ViolationAction.CANCEL_BREAK),
+                "message"
+        ));
+        loadedConfigs.put(ViolationAction.KICK, loadViolationActionConfig(
+                section,
+                "kick",
+                defaults.get(ViolationAction.KICK),
+                "reason"
+        ));
+        loadedConfigs.put(ViolationAction.JAIL, loadViolationActionConfig(
+                section,
+                "jail",
+                defaults.get(ViolationAction.JAIL),
+                "command"
+        ));
+
+        return Collections.unmodifiableMap(loadedConfigs);
+    }
+
+    private ViolationActionConfig loadViolationActionConfig(
+            ConfigurationSection actionsSection,
+            String path,
+            ViolationActionConfig defaults,
+            String contentKey
+    ) {
+        ConfigurationSection section = actionsSection.getConfigurationSection(path);
+        if (section == null) {
+            return defaults;
+        }
+
+        return new ViolationActionConfig(
+                section.getBoolean("enabled", defaults.enabled()),
+                Math.max(1, section.getInt("after-blocks", defaults.afterBlocks())),
+                Math.max(0, section.getInt("cooldown-seconds", defaults.cooldownSeconds())),
+                section.getString(contentKey, defaults.content())
+        );
+    }
+
+    private Map<ViolationAction, ViolationActionConfig> createDefaultViolationActionConfigs() {
+        EnumMap<ViolationAction, ViolationActionConfig> defaults = new EnumMap<>(ViolationAction.class);
+        defaults.put(ViolationAction.WARNING, new ViolationActionConfig(
+                true,
+                5,
+                60,
+                "&eBitte nutze fuer Ressourcen die Farmwelten mit &6/farmwelt&e."
+        ));
+        defaults.put(ViolationAction.NOTIFY_STAFF, new ViolationActionConfig(
+                true,
+                10,
+                60,
+                "&e[Farmwelt] &f{player} baut Ressourcen in &7{world} &fbei &7{x} {y} {z} &fab. Verstoesse im Zeitfenster: &c{count}&f. Kategorie: &7{category}"
+        ));
+        defaults.put(ViolationAction.CANCEL_BREAK, new ViolationActionConfig(
+                false,
+                15,
+                0,
+                "&cDieser Ressourcenabbau ist in der Hauptwelt nicht erlaubt. Nutze /farmwelt."
+        ));
+        defaults.put(ViolationAction.KICK, new ViolationActionConfig(
+                false,
+                25,
+                0,
+                "Bitte nutze fuer Ressourcen die Farmwelten: /farmwelt"
+        ));
+        defaults.put(ViolationAction.JAIL, new ViolationActionConfig(
+                false,
+                40,
+                0,
+                "jail {player} farmwelt"
+        ));
+        return Collections.unmodifiableMap(defaults);
+    }
+
+    private ViolationActionConfig getViolationActionConfig(ViolationAction action) {
+        ViolationActionConfig config = violationActionConfigs.get(action);
+        if (config != null) {
+            return config;
+        }
+
+        return createDefaultViolationActionConfigs().get(action);
+    }
+
     private ResourceWorldRule loadResourceWorldRule(String worldName, ConfigurationSection section) {
         String typeName = section.getString("type");
         Optional<ResourceWorldType> type = ResourceWorldType.fromConfigValue(typeName);
@@ -310,5 +449,13 @@ public final class ConfigManager {
         }
 
         return Collections.unmodifiableSet(set);
+    }
+
+    private record ViolationActionConfig(
+            boolean enabled,
+            int afterBlocks,
+            int cooldownSeconds,
+            String content
+    ) {
     }
 }

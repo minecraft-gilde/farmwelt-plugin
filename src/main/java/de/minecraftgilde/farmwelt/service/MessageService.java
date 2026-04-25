@@ -2,6 +2,7 @@ package de.minecraftgilde.farmwelt.service;
 
 import de.minecraftgilde.farmwelt.config.ConfigManager;
 import de.minecraftgilde.farmwelt.model.ResourceMatch;
+import de.minecraftgilde.farmwelt.model.ViolationSnapshot;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Server;
 import org.bukkit.block.Block;
@@ -39,6 +40,35 @@ public final class MessageService {
         }
     }
 
+    public void logResourceAudit(Player player, Block block, ResourceMatch match) {
+        if (configManager.isAuditLogToConsole()) {
+            plugin.getLogger().info(createConsoleAuditMessage(player, block, match));
+        }
+    }
+
+    public void sendViolationWarning(Player player, ViolationSnapshot snapshot, String message, int windowSeconds) {
+        if (message == null || message.isBlank()) {
+            return;
+        }
+
+        player.sendMessage(LEGACY_AMPERSAND.deserialize(replaceViolationPlaceholders(message, player, snapshot, windowSeconds)));
+    }
+
+    public void sendViolationStaffNotification(Player player, ViolationSnapshot snapshot, String message, int windowSeconds) {
+        if (message == null || message.isBlank()) {
+            return;
+        }
+
+        Server server = plugin.getServer();
+        String notifyPermission = configManager.getNotifyPermission();
+        String formattedMessage = replaceViolationPlaceholders(message, player, snapshot, windowSeconds);
+        for (Player onlinePlayer : server.getOnlinePlayers()) {
+            if (notifyPermission.isBlank() || onlinePlayer.hasPermission(notifyPermission)) {
+                onlinePlayer.sendMessage(LEGACY_AMPERSAND.deserialize(formattedMessage));
+            }
+        }
+    }
+
     private String createConsoleAuditMessage(Player player, Block block, ResourceMatch match) {
         return "[Audit] Spieler " + player.getName()
                 + " (" + player.getUniqueId() + ") hat "
@@ -60,5 +90,19 @@ public final class MessageService {
                 .replace("{z}", Integer.toString(block.getZ()))
                 .replace("{block}", match.material().name())
                 .replace("{category}", match.category());
+    }
+
+    private String replaceViolationPlaceholders(String message, Player player, ViolationSnapshot snapshot, int windowSeconds) {
+        return message
+                .replace("{player}", player.getName())
+                .replace("{uuid}", snapshot.playerId().toString())
+                .replace("{world}", snapshot.latestWorld())
+                .replace("{x}", Integer.toString(snapshot.latestX()))
+                .replace("{y}", Integer.toString(snapshot.latestY()))
+                .replace("{z}", Integer.toString(snapshot.latestZ()))
+                .replace("{block}", snapshot.latestBlock().name())
+                .replace("{category}", snapshot.latestCategory())
+                .replace("{count}", Integer.toString(snapshot.currentCount()))
+                .replace("{window-seconds}", Integer.toString(windowSeconds));
     }
 }

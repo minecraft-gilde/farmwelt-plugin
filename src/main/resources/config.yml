@@ -37,36 +37,91 @@ farmworlds:
       command: "betterrtp:rtp world Endfarm"
 
 resource-monitor:
+  # Schaltet den Ressourcenmonitor insgesamt ein oder aus.
   enabled: true
+
+  # Betriebsmodus des Ressourcenmonitors:
+  # audit  = nur beobachten, Audit loggen und optional Staff informieren; keine Spielerwarnung.
+  # warn   = wie audit, zusaetzlich Verstoesse zaehlen und Spieler/Staff nach actions-Schwellen warnen.
+  # enforce = aktuell wie warn; Blockieren, Kick und Jail sind vorbereitet, aber noch nicht aktiv.
   mode: audit
 
+  # Nur in diesen Welten prueft der Ressourcenmonitor ueberhaupt auf Ressourcenabbau.
   monitored-worlds:
     - world
     - world_nether
     - world_the_end
 
+  # Diese Welten bleiben immer ausgenommen, auch wenn sie versehentlich oben eingetragen werden.
   ignored-worlds:
     - farmwelt
     - netherfarm
     - endfarm
 
+  # Spieler mit dieser Permission werden vom Ressourcenmonitor ignoriert.
   bypass-permission: farmwelt.bypass
+
+  # Spieler mit dieser Permission erhalten Staff-Benachrichtigungen.
   notify-permission: farmwelt.notify
 
+  # Zeitraum, in dem relevante Abbauten pro Spieler gezaehlt werden.
+  # Nach Ablauf startet der Zaehler beim naechsten Treffer wieder bei 1.
+  violation-window-seconds: 600
+
   claim-protection:
+    # Wenn aktiv, wird Ressourcenabbau innerhalb von Claims ignoriert.
     enabled: true
     provider: GriefPrevention
     skip-inside-claims: true
+
+    # disable-monitor = Monitor bleibt sicherheitshalber aus, wenn der Claim-Provider fehlt.
     fail-mode: disable-monitor
     ignore-height: true
 
   audit:
+    # Audit ist das reine Beobachtungs-Logging. Im Modus audit werden keine Spielerwarnungen gesendet.
     notify-staff: true
     log-to-console: true
     staff-message: "&e[Farmwelt-Audit] &f{player} hat &c{block} &fin &7{world} &fbei &7{x} {y} {z} &fabgebaut. Kategorie: &7{category}"
     log-cooldown-seconds: 10
 
+  actions:
+    # Actions sind einzelne Eskalationsstufen. Sie werden nur ausgefuehrt, wenn der mode sie erlaubt.
+    # Beispiel: warning.enabled=true warnt Spieler erst bei mode=warn oder mode=enforce, nicht bei mode=audit.
+    warning:
+      enabled: true
+      after-blocks: 5
+      cooldown-seconds: 60
+      message: "&eBitte nutze fuer Ressourcen die Farmwelten mit &6/farmwelt&e."
+
+    # Staff-Notify unter actions nutzt den Violation-Zaehler und die after-blocks-Schwelle.
+    # Das ist getrennt vom audit.notify-staff, das nur das reine Audit-Verhalten steuert.
+    notify-staff:
+      enabled: true
+      after-blocks: 10
+      cooldown-seconds: 60
+      message: "&e[Farmwelt] &f{player} baut Ressourcen in &7{world} &fbei &7{x} {y} {z} &fab. Verstoesse im Zeitfenster: &c{count}&f. Kategorie: &7{category}"
+
+    # Fuer spaetere Durchsetzung vorbereitet. Wird aktuell noch nicht ausgefuehrt.
+    cancel-break:
+      enabled: false
+      after-blocks: 15
+      message: "&cDieser Ressourcenabbau ist in der Hauptwelt nicht erlaubt. Nutze /farmwelt."
+
+    # Fuer spaetere Durchsetzung vorbereitet. Wird aktuell noch nicht ausgefuehrt.
+    kick:
+      enabled: false
+      after-blocks: 25
+      reason: "Bitte nutze fuer Ressourcen die Farmwelten: /farmwelt"
+
+    # Fuer spaetere Durchsetzung vorbereitet. Wird aktuell noch nicht ausgefuehrt.
+    jail:
+      enabled: false
+      after-blocks: 40
+      command: "jail {player} farmwelt"
+
   world-rules:
+    # Weltbezogene Ressourcenregeln. Nur Materialien in diesen Listen zaehlen als relevante Ressourcen.
     world:
       type: overworld
       sea-level: 63

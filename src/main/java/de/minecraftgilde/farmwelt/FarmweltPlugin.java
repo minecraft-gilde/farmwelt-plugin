@@ -9,6 +9,7 @@ import de.minecraftgilde.farmwelt.service.ClaimProtectionService;
 import de.minecraftgilde.farmwelt.service.FarmweltTeleportService;
 import de.minecraftgilde.farmwelt.service.MessageService;
 import de.minecraftgilde.farmwelt.service.ResourceDetectionService;
+import de.minecraftgilde.farmwelt.service.ViolationService;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public final class FarmweltPlugin extends JavaPlugin {
@@ -19,6 +20,7 @@ public final class FarmweltPlugin extends JavaPlugin {
     private ClaimProtectionService claimProtectionService;
     private ResourceDetectionService resourceDetectionService;
     private MessageService messageService;
+    private ViolationService violationService;
 
     @Override
     public void onEnable() {
@@ -33,10 +35,14 @@ public final class FarmweltPlugin extends JavaPlugin {
         claimProtectionService = new ClaimProtectionService(this);
         resourceDetectionService = new ResourceDetectionService(configManager);
         messageService = new MessageService(this, configManager);
+        violationService = new ViolationService(configManager);
+        if (configManager.isResourceMonitorEnforceMode()) {
+            getLogger().warning("Enforce-Modus ist konfiguriert, aber Blockieren/Kick/Jail sind noch nicht implementiert. Verhalten entspricht aktuell warn.");
+        }
         registerCommand();
         getServer().getPluginManager().registerEvents(new FarmweltGuiListener(teleportService), this);
         getServer().getPluginManager().registerEvents(
-                new ResourceBreakListener(configManager, claimProtectionService, resourceDetectionService, messageService),
+                new ResourceBreakListener(configManager, claimProtectionService, resourceDetectionService, messageService, violationService),
                 this
         );
 
@@ -52,7 +58,7 @@ public final class FarmweltPlugin extends JavaPlugin {
         registerCommand(
                 "farmwelt",
                 "Öffnet die Farmwelt-Auswahl.",
-                new FarmweltCommand(farmweltMenu, claimProtectionService)
+                new FarmweltCommand(farmweltMenu, claimProtectionService, violationService)
         );
     }
 }
