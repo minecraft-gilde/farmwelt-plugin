@@ -51,7 +51,7 @@ public final class ClaimProtectionService {
         try {
             return provider.isInsideClaim(location);
         } catch (RuntimeException exception) {
-            plugin.getLogger().log(Level.WARNING, "Fehler bei der Claim-Pruefung.", exception);
+            plugin.getLogger().log(Level.WARNING, "Fehler bei der Claim-Prüfung.", exception);
             return false;
         }
     }
@@ -81,7 +81,7 @@ public final class ClaimProtectionService {
         GriefPreventionClaimProtectionProvider griefPreventionProvider =
                 new GriefPreventionClaimProtectionProvider(plugin, ignoreHeight);
         if (!griefPreventionProvider.isAvailable()) {
-            plugin.getLogger().warning("Claim-Schutz ist aktiviert, aber GriefPrevention ist nicht verfuegbar.");
+            plugin.getLogger().warning("Claim-Schutz ist aktiviert, aber GriefPrevention ist nicht verfügbar.");
             return new NoopClaimProtectionProvider();
         }
 
@@ -94,7 +94,7 @@ public final class ClaimProtectionService {
         plugin.getLogger().info("Konfigurierter Claim-Provider: " + configuredProviderName);
         plugin.getLogger().info("GriefPrevention gefunden: " + yesNo(griefPreventionFound));
         plugin.getLogger().info("Claim-Hook aktiv: " + yesNo(isAvailable()));
-        plugin.getLogger().info("Claims werden vom Ressourcenmonitor uebersprungen: " + yesNo(enabled && skipInsideClaims));
+        plugin.getLogger().info("Claims werden vom Ressourcenmonitor übersprungen: " + yesNo(enabled && skipInsideClaims));
 
         if (resourceMonitorWouldBeDisabled) {
             plugin.getLogger().warning("Der Ressourcenmonitor wird wegen fehlendem Claim-Provider deaktiviert.");

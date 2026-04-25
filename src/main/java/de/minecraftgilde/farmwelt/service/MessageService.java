@@ -69,6 +69,18 @@ public final class MessageService {
         }
     }
 
+    public void sendJailStaffNotification(Player player, ViolationSnapshot snapshot, String message, int windowSeconds) {
+        sendViolationStaffNotification(player, snapshot, message, windowSeconds);
+    }
+
+    public void sendJailPlayerMessage(Player player, ViolationSnapshot snapshot, String message, int windowSeconds) {
+        if (message == null || message.isBlank()) {
+            return;
+        }
+
+        player.sendMessage(LEGACY_AMPERSAND.deserialize(replaceViolationPlaceholders(message, player, snapshot, windowSeconds)));
+    }
+
     public void sendViolationCancelBreak(
             Player player,
             ViolationSnapshot snapshot,
@@ -108,7 +120,7 @@ public final class MessageService {
                 .replace("{category}", match.category());
     }
 
-    private String replaceViolationPlaceholders(String message, Player player, ViolationSnapshot snapshot, int windowSeconds) {
+    public String replaceViolationPlaceholders(String message, Player player, ViolationSnapshot snapshot, int windowSeconds) {
         return message
                 .replace("{player}", player.getName())
                 .replace("{uuid}", snapshot.playerId().toString())
@@ -119,6 +131,7 @@ public final class MessageService {
                 .replace("{block}", snapshot.latestBlock().name())
                 .replace("{category}", snapshot.latestCategory())
                 .replace("{count}", Integer.toString(snapshot.currentCount()))
+                .replace("{blocked-count}", Integer.toString(snapshot.blockedCount()))
                 .replace("{window-seconds}", Integer.toString(windowSeconds));
     }
 }

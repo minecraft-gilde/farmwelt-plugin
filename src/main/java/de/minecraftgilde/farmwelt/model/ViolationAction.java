@@ -4,6 +4,5 @@ public enum ViolationAction {
     WARNING,
     NOTIFY_STAFF,
     CANCEL_BREAK,
-    KICK,
     JAIL
 }

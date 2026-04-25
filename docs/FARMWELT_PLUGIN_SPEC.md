@@ -160,10 +160,7 @@ Stattdessen soll es in Stufen arbeiten:
 3. Spieler macht weiter
    - Moderatoren werden benachrichtigt.
 
-4. Spieler macht deutlich weiter
-   - Spieler kann gekickt werden.
-
-5. Wiederholter Verstoß
+4. Wiederholter Verstoß
    - Optionaler Konsolenbefehl, z. B. Jail-Befehl:
      `jail {player} farmwelt`
 
@@ -177,7 +174,7 @@ Das Plugin soll verschiedene Modi unterstützen:
 
 Verstöße werden nur geloggt und optional Moderatoren gemeldet.
 
-Es werden keine Blöcke blockiert, keine Spieler gekickt und keine Jail-Befehle ausgeführt.
+Es werden keine Blöcke blockiert und keine Jail-Befehle ausgeführt.
 
 ### `warn`
 
@@ -185,7 +182,7 @@ Spieler werden gewarnt, aber es wird noch nicht hart eingegriffen.
 
 ### `enforce`
 
-Warnungen, Blockabbruch, Staff-Benachrichtigungen, Kick und optionaler Jail-Befehl können aktiv werden.
+Warnungen, Blockabbruch, Staff-Benachrichtigungen und optionaler Jail-Befehl können aktiv werden.
 
 ## Beispiel-Config
 
@@ -304,10 +301,6 @@ resource-monitor:
       after-blocks: 10
       message: "{player} baut Ressourcen in {world} bei {x} {y} {z} ab."
 
-    kick:
-      after-blocks: 18
-      reason: "Bitte nutze für Ressourcen die Farmwelten: /farmwelt"
-
     jail:
       after-blocks: 30
       command: "jail {player} farmwelt"
@@ -357,7 +350,7 @@ src/main/java/de/minecraftgilde/farmwelt/
 - Keine harte Abhängigkeit von EssentialsX.
 - Keine harte Abhängigkeit von BetterRTP.
 - Keine harte Abhängigkeit von GriefPrevention.
-- Jail/Kick soll über konfigurierbare Befehle möglich sein.
+- Jail soll über konfigurierbare Befehle möglich sein.
 - Keine hart codierten Weltnamen außer in der Beispiel-Config.
 - Konfigurierbare Nachrichten.
 - Saubere Fehlerbehandlung, wenn eine konfigurierte Welt nicht existiert.
@@ -384,7 +377,7 @@ In der Vorbereitungsphase werden ausdrücklich nicht umgesetzt:
 - echtes Ausführen des BetterRTP-Befehls
 - BlockBreakEvent-Überwachung
 - Violation-Zähler
-- Kick/Jail-System
+- Jail-System
 - Datenbank/Persistenz
 
 ## Entwicklungsreihenfolge
@@ -399,4 +392,4 @@ Die Umsetzung soll schrittweise erfolgen:
 6. Ressourcenmonitor im Audit-Modus bauen.
 7. Violation-Zähler mit Zeitfenster bauen.
 8. Warnungen, Blockabbruch und Staff-Benachrichtigung bauen.
-9. Kick und optionalen Jail-Befehl bauen.
+9. Optionalen Jail-Befehl bauen.

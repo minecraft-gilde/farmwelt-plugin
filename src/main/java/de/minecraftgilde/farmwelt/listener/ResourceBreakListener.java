@@ -5,6 +5,7 @@ import de.minecraftgilde.farmwelt.model.ResourceMatch;
 import de.minecraftgilde.farmwelt.model.ViolationAction;
 import de.minecraftgilde.farmwelt.model.ViolationResult;
 import de.minecraftgilde.farmwelt.service.ClaimProtectionService;
+import de.minecraftgilde.farmwelt.service.JailActionService;
 import de.minecraftgilde.farmwelt.service.MessageService;
 import de.minecraftgilde.farmwelt.service.ResourceDetectionService;
 import de.minecraftgilde.farmwelt.service.ViolationService;
@@ -28,6 +29,7 @@ public final class ResourceBreakListener implements Listener {
     private final ResourceDetectionService resourceDetectionService;
     private final MessageService messageService;
     private final ViolationService violationService;
+    private final JailActionService jailActionService;
     private final ConcurrentMap<AuditCooldownKey, Long> lastAuditLogTimes = new ConcurrentHashMap<>();
 
     public ResourceBreakListener(
@@ -35,13 +37,15 @@ public final class ResourceBreakListener implements Listener {
             ClaimProtectionService claimProtectionService,
             ResourceDetectionService resourceDetectionService,
             MessageService messageService,
-            ViolationService violationService
+            ViolationService violationService,
+            JailActionService jailActionService
     ) {
         this.configManager = configManager;
         this.claimProtectionService = claimProtectionService;
         this.resourceDetectionService = resourceDetectionService;
         this.messageService = messageService;
         this.violationService = violationService;
+        this.jailActionService = jailActionService;
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
@@ -139,6 +143,11 @@ public final class ResourceBreakListener implements Listener {
                             configManager.getViolationActionActionbarContent(ViolationAction.CANCEL_BREAK),
                             violationService.getWindowSeconds()
                     );
+                }
+
+                ViolationResult blockedAttemptResult = violationService.registerBlockedAttempt(player, block, match);
+                if (blockedAttemptResult.shouldRun(ViolationAction.JAIL)) {
+                    jailActionService.execute(player, blockedAttemptResult.snapshot());
                 }
             }
         }

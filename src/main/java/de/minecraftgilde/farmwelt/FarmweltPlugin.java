@@ -7,6 +7,7 @@ import de.minecraftgilde.farmwelt.listener.FarmweltGuiListener;
 import de.minecraftgilde.farmwelt.listener.ResourceBreakListener;
 import de.minecraftgilde.farmwelt.service.ClaimProtectionService;
 import de.minecraftgilde.farmwelt.service.FarmweltTeleportService;
+import de.minecraftgilde.farmwelt.service.JailActionService;
 import de.minecraftgilde.farmwelt.service.MessageService;
 import de.minecraftgilde.farmwelt.service.ResourceDetectionService;
 import de.minecraftgilde.farmwelt.service.ViolationService;
@@ -21,6 +22,7 @@ public final class FarmweltPlugin extends JavaPlugin {
     private ResourceDetectionService resourceDetectionService;
     private MessageService messageService;
     private ViolationService violationService;
+    private JailActionService jailActionService;
 
     @Override
     public void onEnable() {
@@ -36,10 +38,18 @@ public final class FarmweltPlugin extends JavaPlugin {
         resourceDetectionService = new ResourceDetectionService(configManager);
         messageService = new MessageService(this, configManager);
         violationService = new ViolationService(configManager);
+        jailActionService = new JailActionService(this, configManager, messageService);
         registerCommand();
         getServer().getPluginManager().registerEvents(new FarmweltGuiListener(teleportService), this);
         getServer().getPluginManager().registerEvents(
-                new ResourceBreakListener(configManager, claimProtectionService, resourceDetectionService, messageService, violationService),
+                new ResourceBreakListener(
+                        configManager,
+                        claimProtectionService,
+                        resourceDetectionService,
+                        messageService,
+                        violationService,
+                        jailActionService
+                ),
                 this
         );
 

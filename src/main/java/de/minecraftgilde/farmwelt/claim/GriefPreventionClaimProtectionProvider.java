@@ -61,7 +61,7 @@ public final class GriefPreventionClaimProtectionProvider implements ClaimProtec
             Object claim = getClaimAtMethod.invoke(dataStore, location, ignoreHeight, null);
             return claim != null;
         } catch (IllegalAccessException | InvocationTargetException | LinkageError exception) {
-            plugin.getLogger().log(Level.WARNING, "Fehler bei der GriefPrevention-Claim-Pruefung.", exception);
+            plugin.getLogger().log(Level.WARNING, "Fehler bei der GriefPrevention-Claim-Prüfung.", exception);
             return false;
         }
     }

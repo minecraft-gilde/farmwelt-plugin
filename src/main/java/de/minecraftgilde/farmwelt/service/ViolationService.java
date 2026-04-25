@@ -28,6 +28,7 @@ public final class ViolationService {
     private final ActionConfig warningConfig;
     private final ActionConfig staffNotifyConfig;
     private final ActionConfig cancelBreakConfig;
+    private final JailActionConfig jailConfig;
 
     public ViolationService(ConfigManager configManager) {
         this.windowSeconds = configManager.getViolationWindowSeconds();
@@ -46,6 +47,12 @@ public final class ViolationService {
                 configManager.isViolationActionEnabled(ViolationAction.CANCEL_BREAK),
                 configManager.getViolationActionAfterBlocks(ViolationAction.CANCEL_BREAK),
                 configManager.getViolationActionCooldownSeconds(ViolationAction.CANCEL_BREAK)
+        );
+        this.jailConfig = new JailActionConfig(
+                configManager.isJailActionEnabled() && !"disabled".equalsIgnoreCase(configManager.getJailMode()),
+                configManager.getJailAfterBlockedAttempts(),
+                configManager.getJailCooldownMinutes(),
+                configManager.isJailExecuteOncePerWindow()
         );
     }
 
@@ -70,10 +77,15 @@ public final class ViolationService {
         records.compute(playerId, (ignored, existingRecord) -> {
             boolean startNewWindow = existingRecord == null || isExpired(existingRecord, now);
             int count = startNewWindow ? 1 : existingRecord.currentCount() + 1;
+            int blockedCount = startNewWindow ? 0 : existingRecord.blockedCount();
             Instant windowStart = startNewWindow ? now : existingRecord.windowStart();
             Instant lastWarningTime = existingRecord == null ? null : existingRecord.lastWarningTime();
             Instant lastStaffNotifyTime = existingRecord == null ? null : existingRecord.lastStaffNotifyTime();
             Instant lastCancelBreakTime = existingRecord == null ? null : existingRecord.lastCancelBreakTime();
+            Instant lastBlockedAttemptTime = startNewWindow ? null : existingRecord.lastBlockedAttemptTime();
+            boolean jailActionExecutedInCurrentWindow = !startNewWindow
+                    && existingRecord.jailActionExecutedInCurrentWindow();
+            Instant lastJailActionTime = existingRecord == null ? null : existingRecord.lastJailActionTime();
             EnumSet<ViolationAction> actions = EnumSet.noneOf(ViolationAction.class);
 
             if (runWarnActions && shouldRunAction(warningConfig, count, lastWarningTime, now)) {
@@ -94,7 +106,68 @@ public final class ViolationService {
             ViolationRecord newRecord = new ViolationRecord(
                     playerId,
                     count,
+                    blockedCount,
                     windowStart,
+                    now,
+                    lastBlockedAttemptTime,
+                    worldName,
+                    x,
+                    y,
+                    z,
+                    material,
+                    category,
+                    lastWarningTime,
+                    lastStaffNotifyTime,
+                    lastCancelBreakTime,
+                    jailActionExecutedInCurrentWindow,
+                    lastJailActionTime
+            );
+            updatedRecord.set(newRecord);
+            actionsToRun.set(actions.isEmpty() ? Set.of() : Collections.unmodifiableSet(EnumSet.copyOf(actions)));
+            return newRecord;
+        });
+
+        return new ViolationResult(updatedRecord.get().toSnapshot(), actionsToRun.get());
+    }
+
+    public ViolationResult registerBlockedAttempt(Player player, Block block, ResourceMatch match) {
+        UUID playerId = player.getUniqueId();
+        Instant now = Instant.now();
+        String worldName = block.getWorld().getName();
+        int x = block.getX();
+        int y = block.getY();
+        int z = block.getZ();
+        Material material = match.material();
+        String category = match.category();
+        AtomicReference<ViolationRecord> updatedRecord = new AtomicReference<>();
+        AtomicReference<Set<ViolationAction>> actionsToRun = new AtomicReference<>(Set.of());
+
+        records.compute(playerId, (ignored, existingRecord) -> {
+            boolean startNewWindow = existingRecord == null || isExpired(existingRecord, now);
+            int count = startNewWindow ? 0 : existingRecord.currentCount();
+            int blockedCount = startNewWindow ? 1 : existingRecord.blockedCount() + 1;
+            Instant windowStart = startNewWindow ? now : existingRecord.windowStart();
+            Instant lastViolationTime = startNewWindow ? now : existingRecord.lastViolationTime();
+            Instant lastWarningTime = existingRecord == null ? null : existingRecord.lastWarningTime();
+            Instant lastStaffNotifyTime = existingRecord == null ? null : existingRecord.lastStaffNotifyTime();
+            Instant lastCancelBreakTime = existingRecord == null ? null : existingRecord.lastCancelBreakTime();
+            boolean jailActionExecutedInCurrentWindow = !startNewWindow
+                    && existingRecord.jailActionExecutedInCurrentWindow();
+            Instant lastJailActionTime = existingRecord == null ? null : existingRecord.lastJailActionTime();
+            EnumSet<ViolationAction> actions = EnumSet.noneOf(ViolationAction.class);
+
+            if (shouldRunJailAction(blockedCount, jailActionExecutedInCurrentWindow, lastJailActionTime, now)) {
+                actions.add(ViolationAction.JAIL);
+                jailActionExecutedInCurrentWindow = true;
+                lastJailActionTime = now;
+            }
+
+            ViolationRecord newRecord = new ViolationRecord(
+                    playerId,
+                    count,
+                    blockedCount,
+                    windowStart,
+                    lastViolationTime,
                     now,
                     worldName,
                     x,
@@ -104,7 +177,9 @@ public final class ViolationService {
                     category,
                     lastWarningTime,
                     lastStaffNotifyTime,
-                    lastCancelBreakTime
+                    lastCancelBreakTime,
+                    jailActionExecutedInCurrentWindow,
+                    lastJailActionTime
             );
             updatedRecord.set(newRecord);
             actionsToRun.set(actions.isEmpty() ? Set.of() : Collections.unmodifiableSet(EnumSet.copyOf(actions)));
@@ -122,7 +197,6 @@ public final class ViolationService {
 
         Instant now = Instant.now();
         if (isExpired(record, now)) {
-            records.remove(playerId, record);
             return Optional.empty();
         }
 
@@ -153,10 +227,38 @@ public final class ViolationService {
                 || Duration.between(lastRunTime, now).toMillis() >= cooldownMillis;
     }
 
+    private boolean shouldRunJailAction(
+            int blockedCount,
+            boolean jailActionExecutedInCurrentWindow,
+            Instant lastRunTime,
+            Instant now
+    ) {
+        if (!jailConfig.enabled() || blockedCount < jailConfig.afterBlockedAttempts()) {
+            return false;
+        }
+
+        if (jailConfig.executeOncePerWindow() && jailActionExecutedInCurrentWindow) {
+            return false;
+        }
+
+        long cooldownMillis = jailConfig.cooldownMinutes() * 60_000L;
+        return cooldownMillis <= 0L
+                || lastRunTime == null
+                || Duration.between(lastRunTime, now).toMillis() >= cooldownMillis;
+    }
+
     private record ActionConfig(
             boolean enabled,
             int afterBlocks,
             int cooldownSeconds
+    ) {
+    }
+
+    private record JailActionConfig(
+            boolean enabled,
+            int afterBlockedAttempts,
+            int cooldownMinutes,
+            boolean executeOncePerWindow
     ) {
     }
 }

@@ -48,7 +48,7 @@ public final class FarmweltCommand implements BasicCommand {
         }
 
         if (!player.hasPermission("farmwelt.use")) {
-            player.sendMessage("Dafuer hast du keine Berechtigung.");
+            player.sendMessage("Dafür hast du keine Berechtigung.");
             return;
         }
 
@@ -95,7 +95,7 @@ public final class FarmweltCommand implements BasicCommand {
 
     private void handleClaimDebug(Player player) {
         if (!player.hasPermission("farmwelt.admin")) {
-            player.sendMessage("Dafuer hast du keine Berechtigung.");
+            player.sendMessage("Dafür hast du keine Berechtigung.");
             return;
         }
 
@@ -109,7 +109,7 @@ public final class FarmweltCommand implements BasicCommand {
 
     private void handleViolationsDebug(Player player, String[] args) {
         if (!player.hasPermission("farmwelt.admin")) {
-            player.sendMessage("Dafuer hast du keine Berechtigung.");
+            player.sendMessage("Dafür hast du keine Berechtigung.");
             return;
         }
 
@@ -131,13 +131,15 @@ public final class FarmweltCommand implements BasicCommand {
 
     private void sendViolationSnapshot(Player player, Player target, ViolationSnapshot snapshot) {
         if (!player.getUniqueId().equals(target.getUniqueId())) {
-            player.sendMessage("Violation-Status fuer: " + target.getName());
+            player.sendMessage("Violation-Status für: " + target.getName());
         }
 
-        player.sendMessage("Verstoesse im aktuellen Zeitfenster: " + snapshot.currentCount());
+        player.sendMessage("Verstöße im aktuellen Zeitfenster: " + snapshot.currentCount());
+        player.sendMessage("Blockierte Versuche: " + snapshot.blockedCount());
         player.sendMessage("Zeitfenster: " + violationService.getWindowSeconds() + " Sekunden");
         player.sendMessage("Verbleibende Zeit: " + violationService.getRemainingWindowSeconds(snapshot) + " Sekunden");
         sendViolationThresholds(player, snapshot.currentCount());
+        sendJailStatus(player, snapshot.jailActionExecutedInCurrentWindow());
         player.sendMessage("Letzter Block: " + snapshot.latestBlock().name());
         player.sendMessage("Kategorie: " + snapshot.latestCategory());
         player.sendMessage("Letzte Position: " + snapshot.latestWorld()
@@ -148,12 +150,14 @@ public final class FarmweltCommand implements BasicCommand {
 
     private void sendEmptyViolationSnapshot(Player player, Player target) {
         if (!player.getUniqueId().equals(target.getUniqueId())) {
-            player.sendMessage("Violation-Status fuer: " + target.getName());
+            player.sendMessage("Violation-Status für: " + target.getName());
         }
 
-        player.sendMessage("Verstoesse im aktuellen Zeitfenster: 0");
+        player.sendMessage("Verstöße im aktuellen Zeitfenster: 0");
+        player.sendMessage("Blockierte Versuche: 0");
         player.sendMessage("Zeitfenster: " + violationService.getWindowSeconds() + " Sekunden");
         sendViolationThresholds(player, 0);
+        sendJailStatus(player, false);
         player.sendMessage("Es wurde keine aktuelle Ressource erfasst.");
     }
 
@@ -163,6 +167,13 @@ public final class FarmweltCommand implements BasicCommand {
         player.sendMessage("Blockier-Schwelle: " + configManager.getViolationActionAfterBlocks(ViolationAction.CANCEL_BREAK));
         player.sendMessage("Blockieren aktiv: " + yesNo(isCancelBreakActive(currentCount)));
         player.sendMessage("Modus: " + configManager.getResourceMonitorMode());
+    }
+
+    private void sendJailStatus(Player player, boolean jailActionExecutedInCurrentWindow) {
+        player.sendMessage("Jail-Modus: " + configManager.getJailMode());
+        player.sendMessage("Jail-Schwelle: " + configManager.getJailAfterBlockedAttempts());
+        player.sendMessage("Jail-Cooldown: " + configManager.getJailCooldownMinutes() + " Minuten");
+        player.sendMessage("Jail-Aktion in diesem Fenster bereits ausgelöst: " + yesNo(jailActionExecutedInCurrentWindow));
     }
 
     private boolean isCancelBreakActive(int currentCount) {

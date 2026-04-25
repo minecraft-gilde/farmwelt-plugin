@@ -40,6 +40,7 @@ public final class ConfigManager {
     private int auditLogCooldownSeconds = 10;
     private int violationWindowSeconds = 600;
     private Map<ViolationAction, ViolationActionConfig> violationActionConfigs = Map.of();
+    private JailActionConfig jailActionConfig = createDefaultJailActionConfig();
     private Map<String, ResourceWorldRule> resourceWorldRules = Map.of();
 
     public ConfigManager(JavaPlugin plugin) {
@@ -81,6 +82,7 @@ public final class ConfigManager {
             resourceMonitorEnabled = false;
             resourceWorldRules = Map.of();
             violationActionConfigs = createDefaultViolationActionConfigs();
+            jailActionConfig = createDefaultJailActionConfig();
             plugin.getLogger().warning("Config-Bereich 'resource-monitor' fehlt. Der Ressourcenmonitor bleibt deaktiviert.");
             return;
         }
@@ -103,6 +105,7 @@ public final class ConfigManager {
 
         resourceWorldRules = loadResourceWorldRules(section.getConfigurationSection("world-rules"));
         violationActionConfigs = loadViolationActionConfigs(section.getConfigurationSection("actions"));
+        jailActionConfig = loadJailActionConfig(section.getConfigurationSection("actions"));
     }
 
     public boolean isResourceMonitorEnabled() {
@@ -187,6 +190,42 @@ public final class ConfigManager {
 
     public String getViolationActionActionbarContent(ViolationAction action) {
         return getViolationActionConfig(action).actionbarContent();
+    }
+
+    public boolean isJailActionEnabled() {
+        return jailActionConfig.enabled();
+    }
+
+    public String getJailMode() {
+        return jailActionConfig.mode() == null ? "notify-only" : jailActionConfig.mode();
+    }
+
+    public int getJailAfterBlockedAttempts() {
+        return jailActionConfig.afterBlockedAttempts();
+    }
+
+    public int getJailCooldownMinutes() {
+        return jailActionConfig.cooldownMinutes();
+    }
+
+    public boolean isJailExecuteOncePerWindow() {
+        return jailActionConfig.executeOncePerWindow();
+    }
+
+    public String getJailCommand() {
+        return jailActionConfig.command() == null ? "" : jailActionConfig.command();
+    }
+
+    public boolean isJailNotifyStaff() {
+        return jailActionConfig.notifyStaff();
+    }
+
+    public String getJailStaffMessage() {
+        return jailActionConfig.staffMessage() == null ? "" : jailActionConfig.staffMessage();
+    }
+
+    public String getJailPlayerMessage() {
+        return jailActionConfig.playerMessage() == null ? "" : jailActionConfig.playerMessage();
     }
 
     private FarmweltMenuItem loadFarmweltMenuItem(String key, ConfigurationSection section) {
@@ -281,7 +320,7 @@ public final class ConfigManager {
         for (String worldName : section.getKeys(false)) {
             ConfigurationSection ruleSection = section.getConfigurationSection(worldName);
             if (ruleSection == null) {
-                plugin.getLogger().warning("Ressourcenregel fuer Welt '" + worldName + "' ist kein gueltiger Config-Bereich.");
+                plugin.getLogger().warning("Ressourcenregel für Welt '" + worldName + "' ist kein gültiger Config-Bereich.");
                 continue;
             }
 
@@ -319,12 +358,6 @@ public final class ConfigManager {
                 defaults.get(ViolationAction.CANCEL_BREAK),
                 "message"
         ));
-        loadedConfigs.put(ViolationAction.KICK, loadViolationActionConfig(
-                section,
-                "kick",
-                defaults.get(ViolationAction.KICK),
-                "reason"
-        ));
         loadedConfigs.put(ViolationAction.JAIL, loadViolationActionConfig(
                 section,
                 "jail",
@@ -355,20 +388,61 @@ public final class ConfigManager {
         );
     }
 
+    private JailActionConfig loadJailActionConfig(ConfigurationSection actionsSection) {
+        JailActionConfig defaults = createDefaultJailActionConfig();
+        if (actionsSection == null) {
+            return defaults;
+        }
+
+        ConfigurationSection section = actionsSection.getConfigurationSection("jail");
+        if (section == null) {
+            return defaults;
+        }
+
+        String mode = normalizeJailMode(section.getString("mode", defaults.mode()));
+        return new JailActionConfig(
+                section.getBoolean("enabled", defaults.enabled()),
+                mode,
+                Math.max(1, section.getInt("after-blocked-attempts", defaults.afterBlockedAttempts())),
+                Math.max(0, section.getInt("cooldown-minutes", defaults.cooldownMinutes())),
+                section.getBoolean("execute-once-per-window", defaults.executeOncePerWindow()),
+                section.getString("command", defaults.command()),
+                section.getBoolean("notify-staff", defaults.notifyStaff()),
+                section.getString("staff-message", defaults.staffMessage()),
+                section.getString("player-message", defaults.playerMessage())
+        );
+    }
+
+    private String normalizeJailMode(String mode) {
+        if (mode == null || mode.isBlank()) {
+            return "notify-only";
+        }
+
+        String normalizedMode = mode.trim().toLowerCase(Locale.ROOT);
+        if ("disabled".equals(normalizedMode)
+                || "notify-only".equals(normalizedMode)
+                || "execute-command".equals(normalizedMode)) {
+            return normalizedMode;
+        }
+
+        plugin.getLogger().warning("Unbekannter Jail-Modus konfiguriert: " + mode + ". Es wird 'notify-only' verwendet.");
+        return "notify-only";
+    }
+
     private Map<ViolationAction, ViolationActionConfig> createDefaultViolationActionConfigs() {
         EnumMap<ViolationAction, ViolationActionConfig> defaults = new EnumMap<>(ViolationAction.class);
         defaults.put(ViolationAction.WARNING, new ViolationActionConfig(
                 true,
                 5,
                 60,
-                "&eBitte nutze fuer Ressourcen die Farmwelten mit &6/farmwelt&e.",
+                "&eBitte nutze für Ressourcen die Farmwelten mit &6/farmwelt&e.",
                 ""
         ));
         defaults.put(ViolationAction.NOTIFY_STAFF, new ViolationActionConfig(
                 true,
                 10,
                 60,
-                "&e[Farmwelt] &f{player} baut Ressourcen in &7{world} &fbei &7{x} {y} {z} &fab. Verstoesse im Zeitfenster: &c{count}&f. Kategorie: &7{category}",
+                "&e[Farmwelt] &f{player} baut Ressourcen in &7{world} &fbei &7{x} {y} {z} &fab. Verstöße im Zeitfenster: &c{count}&f. Kategorie: &7{category}",
                 ""
         ));
         defaults.put(ViolationAction.CANCEL_BREAK, new ViolationActionConfig(
@@ -378,13 +452,6 @@ public final class ConfigManager {
                 "&cDer Ressourcenabbau in dieser Welt ist jetzt blockiert. Bitte nutze die Farmwelten mit &e/farmwelt&c.",
                 "&cRessourcenabbau blockiert! Nutze &e/farmwelt&c."
         ));
-        defaults.put(ViolationAction.KICK, new ViolationActionConfig(
-                false,
-                25,
-                0,
-                "Bitte nutze fuer Ressourcen die Farmwelten: /farmwelt",
-                ""
-        ));
         defaults.put(ViolationAction.JAIL, new ViolationActionConfig(
                 false,
                 40,
@@ -393,6 +460,20 @@ public final class ConfigManager {
                 ""
         ));
         return Collections.unmodifiableMap(defaults);
+    }
+
+    private JailActionConfig createDefaultJailActionConfig() {
+        return new JailActionConfig(
+                false,
+                "notify-only",
+                20,
+                60,
+                true,
+                "jail {player} farmwelt",
+                true,
+                "&c[Farmwelt] &f{player} hat trotz Blockierung weiter Ressourcenabbau versucht. Blockierte Versuche: &c{blocked-count}&f. Jail wäre jetzt möglich.",
+                "&cDu wurdest wegen wiederholtem Ressourcenabbau in der Hauptwelt ins Gefängnis gesetzt."
+        );
     }
 
     private ViolationActionConfig getViolationActionConfig(ViolationAction action) {
@@ -408,7 +489,7 @@ public final class ConfigManager {
         String typeName = section.getString("type");
         Optional<ResourceWorldType> type = ResourceWorldType.fromConfigValue(typeName);
         if (type.isEmpty()) {
-            plugin.getLogger().warning("Ressourcenregel fuer Welt '" + worldName + "' hat einen ungueltigen Typ: " + typeName);
+            plugin.getLogger().warning("Ressourcenregel für Welt '" + worldName + "' hat einen ungültigen Typ: " + typeName);
             return null;
         }
 
@@ -444,7 +525,7 @@ public final class ConfigManager {
             String normalizedName = materialName.trim().toUpperCase(Locale.ROOT);
             Material material = Material.matchMaterial(normalizedName);
             if (material == null || !material.isBlock()) {
-                plugin.getLogger().warning("Ungueltiges Material in " + configPath + ": " + materialName);
+                plugin.getLogger().warning("Ungültiges Material in " + configPath + ": " + materialName);
                 continue;
             }
 
@@ -471,6 +552,19 @@ public final class ConfigManager {
             int cooldownSeconds,
             String content,
             String actionbarContent
+    ) {
+    }
+
+    private record JailActionConfig(
+            boolean enabled,
+            String mode,
+            int afterBlockedAttempts,
+            int cooldownMinutes,
+            boolean executeOncePerWindow,
+            String command,
+            boolean notifyStaff,
+            String staffMessage,
+            String playerMessage
     ) {
     }
 }
