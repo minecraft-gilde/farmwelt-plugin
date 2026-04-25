@@ -13,7 +13,7 @@ dependencies:
     GriefPrevention:
       load: BEFORE
       required: false
-      join-classpath: false
+      join-classpath: true
 permissions:
   farmwelt.use:
     description: Darf /farmwelt verwenden.

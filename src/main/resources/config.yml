@@ -45,6 +45,7 @@ resource-monitor:
     provider: GriefPrevention
     skip-inside-claims: true
     fail-mode: disable-monitor
+    ignore-height: true
 
   monitored-worlds:
     - world
