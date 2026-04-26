@@ -1,5 +1,6 @@
 package de.minecraftgilde.farmwelt.command;
 
+import de.minecraftgilde.farmwelt.FarmweltPlugin;
 import de.minecraftgilde.farmwelt.config.ConfigManager;
 import de.minecraftgilde.farmwelt.gui.FarmweltMenu;
 import de.minecraftgilde.farmwelt.model.ViolationAction;
@@ -8,6 +9,7 @@ import de.minecraftgilde.farmwelt.service.ClaimProtectionService;
 import de.minecraftgilde.farmwelt.service.ViolationService;
 import io.papermc.paper.command.brigadier.BasicCommand;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import org.bukkit.Bukkit;
@@ -17,17 +19,23 @@ import org.jspecify.annotations.Nullable;
 
 public final class FarmweltCommand implements BasicCommand {
 
+    private static final String USE_PERMISSION = "farmwelt.use";
+    private static final String ADMIN_PERMISSION = "farmwelt.admin";
+
+    private final FarmweltPlugin plugin;
     private final FarmweltMenu farmweltMenu;
     private final ClaimProtectionService claimProtectionService;
     private final ViolationService violationService;
     private final ConfigManager configManager;
 
     public FarmweltCommand(
+            FarmweltPlugin plugin,
             FarmweltMenu farmweltMenu,
             ClaimProtectionService claimProtectionService,
             ViolationService violationService,
             ConfigManager configManager
     ) {
+        this.plugin = plugin;
         this.farmweltMenu = farmweltMenu;
         this.claimProtectionService = claimProtectionService;
         this.violationService = violationService;
@@ -37,17 +45,17 @@ public final class FarmweltCommand implements BasicCommand {
     @Override
     public void execute(CommandSourceStack source, String[] args) {
         CommandSender sender = source.getSender();
+        if (args.length > 0) {
+            handleSubCommand(sender, args);
+            return;
+        }
+
         if (!(sender instanceof Player player)) {
             sender.sendMessage("Dieser Befehl kann nur von Spielern ausgeführt werden.");
             return;
         }
 
-        if (args.length > 0) {
-            handleSubCommand(player, args);
-            return;
-        }
-
-        if (!player.hasPermission("farmwelt.use")) {
+        if (!player.hasPermission(USE_PERMISSION)) {
             player.sendMessage("Dafür hast du keine Berechtigung.");
             return;
         }
@@ -62,22 +70,53 @@ public final class FarmweltCommand implements BasicCommand {
 
     @Override
     public Collection<String> suggest(CommandSourceStack source, String[] args) {
+        CommandSender sender = source.getSender();
         if (args.length == 1) {
-            return List.of("debug");
+            if (!canUseAdminCommand(sender)) {
+                return List.of();
+            }
+
+            List<String> suggestions = new ArrayList<>(List.of("reload", "info"));
+            if (sender instanceof Player) {
+                suggestions.add("debug");
+            }
+            return suggestions;
         }
 
-        if (args.length == 2 && "debug".equalsIgnoreCase(args[0])) {
+        if (args.length == 2
+                && "debug".equalsIgnoreCase(args[0])
+                && sender instanceof Player
+                && canUseAdminCommand(sender)) {
             return List.of("claim", "violations");
         }
 
-        if (args.length == 3 && "debug".equalsIgnoreCase(args[0]) && "violations".equalsIgnoreCase(args[1])) {
+        if (args.length == 3
+                && "debug".equalsIgnoreCase(args[0])
+                && "violations".equalsIgnoreCase(args[1])
+                && sender instanceof Player
+                && canUseAdminCommand(sender)) {
             return Bukkit.getOnlinePlayers().stream().map(Player::getName).toList();
         }
 
         return List.of();
     }
 
-    private void handleSubCommand(Player player, String[] args) {
+    private void handleSubCommand(CommandSender sender, String[] args) {
+        if (args.length == 1 && "reload".equalsIgnoreCase(args[0])) {
+            handleReload(sender);
+            return;
+        }
+
+        if (args.length == 1 && "info".equalsIgnoreCase(args[0])) {
+            handleInfo(sender);
+            return;
+        }
+
+        if (!(sender instanceof Player player)) {
+            sender.sendMessage("Dieser Befehl kann nur von Spielern ausgeführt werden.");
+            return;
+        }
+
         if (args.length == 2 && "debug".equalsIgnoreCase(args[0]) && "claim".equalsIgnoreCase(args[1])) {
             handleClaimDebug(player);
             return;
@@ -90,11 +129,38 @@ public final class FarmweltCommand implements BasicCommand {
             return;
         }
 
-        player.sendMessage("Unbekannter Farmwelt-Befehl.");
+        sender.sendMessage("Unbekannter Farmwelt-Befehl.");
+    }
+
+    private void handleReload(CommandSender sender) {
+        if (!canUseAdminCommand(sender)) {
+            sender.sendMessage("Dafür hast du keine Berechtigung.");
+            return;
+        }
+
+        plugin.reloadFarmweltConfiguration();
+        sender.sendMessage("Farmwelt-Konfiguration wurde neu geladen.");
+    }
+
+    private void handleInfo(CommandSender sender) {
+        if (!canUseAdminCommand(sender)) {
+            sender.sendMessage("Dafür hast du keine Berechtigung.");
+            return;
+        }
+
+        sender.sendMessage("Farmwelt " + plugin.getPluginMeta().getVersion());
+        sender.sendMessage("Geladene Farmwelten: " + configManager.getFarmweltMenuItems().size());
+        sender.sendMessage("Ressourcenmonitor: " + yesNo(configManager.isResourceMonitorEnabled())
+                + " (Modus: " + configManager.getResourceMonitorMode() + ")");
+        sender.sendMessage("Claim-Provider: " + claimProtectionService.getProviderName());
+        sender.sendMessage("Claim-Hook aktiv: " + yesNo(claimProtectionService.isAvailable()));
+        sender.sendMessage("BetterRTP aktiv: " + yesNo(isPluginEnabled("BetterRTP")));
+        sender.sendMessage("GriefPrevention aktiv: " + yesNo(isPluginEnabled("GriefPrevention")));
+        sender.sendMessage("Jail-Modus: " + configManager.getJailMode());
     }
 
     private void handleClaimDebug(Player player) {
-        if (!player.hasPermission("farmwelt.admin")) {
+        if (!player.hasPermission(ADMIN_PERMISSION)) {
             player.sendMessage("Dafür hast du keine Berechtigung.");
             return;
         }
@@ -108,7 +174,7 @@ public final class FarmweltCommand implements BasicCommand {
     }
 
     private void handleViolationsDebug(Player player, String[] args) {
-        if (!player.hasPermission("farmwelt.admin")) {
+        if (!player.hasPermission(ADMIN_PERMISSION)) {
             player.sendMessage("Dafür hast du keine Berechtigung.");
             return;
         }
@@ -180,6 +246,14 @@ public final class FarmweltCommand implements BasicCommand {
         return configManager.isResourceMonitorEnforceMode()
                 && configManager.isViolationActionEnabled(ViolationAction.CANCEL_BREAK)
                 && currentCount >= configManager.getViolationActionAfterBlocks(ViolationAction.CANCEL_BREAK);
+    }
+
+    private boolean canUseAdminCommand(CommandSender sender) {
+        return !(sender instanceof Player) || sender.hasPermission(ADMIN_PERMISSION);
+    }
+
+    private boolean isPluginEnabled(String pluginName) {
+        return plugin.getServer().getPluginManager().isPluginEnabled(pluginName);
     }
 
     private String yesNo(boolean value) {

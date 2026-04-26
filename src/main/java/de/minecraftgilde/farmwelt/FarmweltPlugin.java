@@ -61,11 +61,19 @@ public final class FarmweltPlugin extends JavaPlugin {
         getLogger().info("Farmwelt wurde gestoppt.");
     }
 
+    public void reloadFarmweltConfiguration() {
+        reloadConfig();
+        configManager.loadFarmweltMenuItems();
+        configManager.loadResourceMonitorConfig();
+        claimProtectionService.reload();
+        violationService.reload(configManager);
+    }
+
     private void registerCommand() {
         registerCommand(
                 "farmwelt",
                 "Öffnet die Farmwelt-Auswahl.",
-                new FarmweltCommand(farmweltMenu, claimProtectionService, violationService, configManager)
+                new FarmweltCommand(this, farmweltMenu, claimProtectionService, violationService, configManager)
         );
     }
 }

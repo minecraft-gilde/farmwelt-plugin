@@ -23,32 +23,36 @@ import org.bukkit.entity.Player;
 public final class ViolationService {
 
     private final ConcurrentMap<UUID, ViolationRecord> records = new ConcurrentHashMap<>();
-    private final int windowSeconds;
-    private final long windowMillis;
-    private final ActionConfig warningConfig;
-    private final ActionConfig staffNotifyConfig;
-    private final ActionConfig cancelBreakConfig;
-    private final JailActionConfig jailConfig;
+    private int windowSeconds;
+    private long windowMillis;
+    private ActionConfig warningConfig;
+    private ActionConfig staffNotifyConfig;
+    private ActionConfig cancelBreakConfig;
+    private JailActionConfig jailConfig;
 
     public ViolationService(ConfigManager configManager) {
-        this.windowSeconds = configManager.getViolationWindowSeconds();
-        this.windowMillis = windowSeconds * 1000L;
-        this.warningConfig = new ActionConfig(
+        reload(configManager);
+    }
+
+    public void reload(ConfigManager configManager) {
+        windowSeconds = configManager.getViolationWindowSeconds();
+        windowMillis = windowSeconds * 1000L;
+        warningConfig = new ActionConfig(
                 configManager.isViolationActionEnabled(ViolationAction.WARNING),
                 configManager.getViolationActionAfterBlocks(ViolationAction.WARNING),
                 configManager.getViolationActionCooldownSeconds(ViolationAction.WARNING)
         );
-        this.staffNotifyConfig = new ActionConfig(
+        staffNotifyConfig = new ActionConfig(
                 configManager.isViolationActionEnabled(ViolationAction.NOTIFY_STAFF),
                 configManager.getViolationActionAfterBlocks(ViolationAction.NOTIFY_STAFF),
                 configManager.getViolationActionCooldownSeconds(ViolationAction.NOTIFY_STAFF)
         );
-        this.cancelBreakConfig = new ActionConfig(
+        cancelBreakConfig = new ActionConfig(
                 configManager.isViolationActionEnabled(ViolationAction.CANCEL_BREAK),
                 configManager.getViolationActionAfterBlocks(ViolationAction.CANCEL_BREAK),
                 configManager.getViolationActionCooldownSeconds(ViolationAction.CANCEL_BREAK)
         );
-        this.jailConfig = new JailActionConfig(
+        jailConfig = new JailActionConfig(
                 configManager.isJailActionEnabled() && !"disabled".equalsIgnoreCase(configManager.getJailMode()),
                 configManager.getJailAfterBlockedAttempts(),
                 configManager.getJailCooldownMinutes(),

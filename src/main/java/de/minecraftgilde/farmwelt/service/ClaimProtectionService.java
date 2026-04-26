@@ -14,16 +14,19 @@ public final class ClaimProtectionService {
     private static final String FAIL_MODE_DISABLE_MONITOR = "disable-monitor";
 
     private final JavaPlugin plugin;
-    private final boolean enabled;
-    private final boolean skipInsideClaims;
-    private final String configuredProviderName;
-    private final String failMode;
-    private final ClaimProtectionProvider provider;
-    private final boolean resourceMonitorWouldBeDisabled;
+    private boolean enabled;
+    private boolean skipInsideClaims;
+    private String configuredProviderName;
+    private String failMode;
+    private ClaimProtectionProvider provider;
+    private boolean resourceMonitorWouldBeDisabled;
 
     public ClaimProtectionService(JavaPlugin plugin) {
         this.plugin = plugin;
+        reload();
+    }
 
+    public void reload() {
         ConfigurationSection section = plugin.getConfig().getConfigurationSection("resource-monitor.claim-protection");
         enabled = section != null && section.getBoolean("enabled", false);
         skipInsideClaims = section == null || section.getBoolean("skip-inside-claims", true);
