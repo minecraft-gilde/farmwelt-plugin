@@ -124,6 +124,15 @@ Erwartung: Keine Warnung, keine Staff-Violation und kein Blockieren, wenn `skip-
 
 Erwartung: Keine Warnung, keine Staff-Violation und kein Blockieren für diesen Spieler.
 
+### Test I: Explosionsschutz
+
+1. In einer überwachten Welt einen Ressourcenblock und einen nicht relevanten Block platzieren.
+2. `mode: enforce` und `actions.cancel-break.enabled: true` setzen.
+3. Eine Explosion auslösen, zum Beispiel TNT in sicherer Testumgebung.
+4. Prüfen, welche Blöcke zerstört wurden.
+
+Erwartung: Der Ressourcenblock bleibt stehen, weil er aus der Explosionsliste entfernt wurde. Andere Blöcke können weiterhin durch die Explosion zerstört werden. In `audit` und `warn` verändert der Explosionsschutz keine Blöcke.
+
 ## Rollout-Strategie für den Live-Server
 
 ### Phase 1: Audit
@@ -156,6 +165,7 @@ Empfohlen:
 
 - `cancel-break.enabled: true`
 - `cancel-break.after-blocks` nicht zu niedrig setzen.
+- Explosionsschutz mit TNT oder anderer kontrollierter Explosion testen.
 - Staff-Meldungen weiter beobachten.
 - Jail oder andere harte Sanktionen deaktiviert lassen, bis der Serverbetrieb stabil ist.
 

@@ -14,6 +14,7 @@ Das Plugin soll Spieler in Farmwelten lenken und Moderatoren entlasten. Es ist k
 - `audit`-Modus zum Beobachten ohne Spielerwarnung und ohne Blockieren.
 - `warn`-Modus mit Spielerwarnungen und Staff-Benachrichtigungen.
 - `enforce`-Modus mit sichtbarem Blockabbruch ab konfigurierter Schwelle.
+- Explosionsschutz im `enforce`-Modus: erkannte Ressourcen werden aus Explosionslisten entfernt.
 - Violation-Zähler mit Zeitfenster und Cooldowns.
 - `/farmwelt info`, `/farmwelt reload` und Debug-Befehle.
 - GitHub Action für den Gradle-Build.
@@ -105,7 +106,7 @@ Der Modus wird über `resource-monitor.mode` gesetzt.
 
 ### `enforce`
 
-`enforce` zählt Verstöße, warnt Spieler und kann Ressourcenabbau ab der `cancel-break`-Schwelle abbrechen. Der Abbruch ist sichtbar: Spieler erhalten eine Chat-Nachricht und optional eine Actionbar-Nachricht. Es gibt keinen Kick. Eine Jail-Eskalation ist zwar als optionale Config-Stufe vorhanden, aber standardmäßig deaktiviert und sollte nicht ohne Tests aktiviert werden.
+`enforce` zählt Verstöße, warnt Spieler und kann Ressourcenabbau ab der `cancel-break`-Schwelle abbrechen. Zusätzlich entfernt der Ressourcenmonitor erkannte Ressourcenblöcke aus Explosionslisten, wenn `actions.cancel-break.enabled` aktiv ist. Explosionen selbst werden dabei nicht komplett abgebrochen; nur die geschützten Ressourcen bleiben stehen. Es gibt keinen Kick. Eine Jail-Eskalation ist zwar als optionale Config-Stufe vorhanden, aber standardmäßig deaktiviert und sollte nicht ohne Tests aktiviert werden.
 
 ## Weltregeln
 
@@ -284,7 +285,9 @@ resource-monitor:
 
 ## Performance-Hinweise
 
-- Der Ressourcenmonitor reagiert nur auf Blockabbau-Events und bricht früh ab, wenn der Monitor deaktiviert ist, die Welt nicht überwacht wird oder der Spieler Bypass hat.
+- Der Ressourcenmonitor reagiert auf Blockabbau-Events sowie im `enforce`-Modus auf Block- und Entity-Explosionen.
+- Bei Explosionen werden nur erkannte Ressourcenblöcke aus der Explosionsliste entfernt; andere Blöcke der Explosion bleiben unverändert.
+- Der Ressourcenmonitor bricht früh ab, wenn der Monitor deaktiviert ist, die Welt nicht überwacht wird oder der Spieler Bypass hat.
 - Die Materiallisten werden beim Laden der Config in Material-Sets vorbereitet und nicht pro Event aus der Config gelesen.
 - Die Claim-Prüfung erfolgt erst nach Welt-, Bypass- und Ressourcenprüfung.
 - Audit-, Warn-, Notify- und Blockiermeldungen haben konfigurierbare Cooldowns.
@@ -335,6 +338,15 @@ resource-monitor:
 - Spieler hat Bypass.
 - Der Block wird nicht als Ressource erkannt.
 - Der Block liegt in einem Claim.
+
+### Explosionen zerstören Ressourcen
+
+- `resource-monitor.mode` ist nicht `enforce`.
+- `actions.cancel-break.enabled` ist `false`.
+- Welt steht nicht in `monitored-worlds` oder steht in `ignored-worlds`.
+- Der Block wird nicht als Ressource erkannt.
+- Block liegt in einem Claim und Claim-Ausnahmen sind aktiv.
+- Ein anderes Plugin verändert die Explosion nach Farmwelt erneut.
 
 ## Entwicklungshinweise
 

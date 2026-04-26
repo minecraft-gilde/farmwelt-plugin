@@ -63,7 +63,7 @@ Beim Start:
 5. Der Befehl `/farmwelt` wird registriert.
 6. `FarmweltCommand` wird zusätzlich als Listener registriert, weil der Monitor-Debug auf Rechtsklicks reagiert.
 7. `FarmweltGuiListener` verarbeitet GUI-Klicks.
-8. `ResourceBreakListener` verarbeitet Blockabbau-Events.
+8. `ResourceBreakListener` verarbeitet Blockabbau- und Explosions-Events.
 
 Beim Reload über `/farmwelt reload`:
 
@@ -182,7 +182,7 @@ Klasse:
 
 - `ResourceBreakListener`
 
-Der Ressourcenmonitor reagiert auf `BlockBreakEvent` mit `ignoreCancelled = true`. Bereits von anderen Plugins abgebrochene Events werden nicht verarbeitet.
+Der Ressourcenmonitor reagiert auf `BlockBreakEvent`, `BlockExplodeEvent` und `EntityExplodeEvent` mit `ignoreCancelled = true`. Bereits von anderen Plugins abgebrochene Events werden nicht verarbeitet.
 
 Entscheidungsreihenfolge:
 
@@ -198,6 +198,8 @@ Entscheidungsreihenfolge:
 10. Danach wird je nach Modus Audit, Warnung, Staff-Notify oder Blockabbruch verarbeitet.
 
 Diese Reihenfolge ist wichtig: Teurere Prüfungen wie Claims passieren erst, nachdem einfache Ausschlussgründe erledigt sind.
+
+Im `enforce`-Modus schützt der Listener zusätzlich Ressourcenblöcke vor indirekter Zerstörung durch Explosionen. Dafür wird die `blockList()` des Explosions-Events gefiltert: erkannte Ressourcenblöcke werden entfernt, die Explosion selbst wird aber nicht komplett abgebrochen. Der Explosionsschutz ist aktiv, wenn der Ressourcenmonitor im `enforce`-Modus läuft und `actions.cancel-break.enabled` aktiv ist.
 
 ## Weltregeln und ResourceDetectionService
 
@@ -341,6 +343,14 @@ Ablauf bei einem relevanten Blockabbau:
 4. Spieler erhält je nach Cooldown Chat- und/oder Actionbar-Nachricht.
 5. Der blockierte Versuch wird separat registriert.
 6. Wenn die Jail-Schwelle für blockierte Versuche erreicht ist, wird `JailActionService.execute(...)` aufgerufen.
+
+Ablauf bei einer relevanten Explosion:
+
+1. `BlockExplodeEvent` oder `EntityExplodeEvent` liefert die betroffenen Blöcke.
+2. Der Listener prüft Monitorstatus, `enforce`-Modus und `cancel-break`.
+3. Für jeden Block werden Weltregel, Ressourcenmaterial und Claim-Ausnahme geprüft.
+4. Erkannte Ressourcenblöcke werden aus der Explosionsliste entfernt.
+5. Alle übrigen Blöcke bleiben in der Explosionsliste.
 
 Jail ist standardmäßig deaktiviert:
 

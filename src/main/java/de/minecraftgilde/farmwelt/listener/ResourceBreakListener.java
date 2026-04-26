@@ -9,6 +9,7 @@ import de.minecraftgilde.farmwelt.service.JailActionService;
 import de.minecraftgilde.farmwelt.service.MessageService;
 import de.minecraftgilde.farmwelt.service.ResourceDetectionService;
 import de.minecraftgilde.farmwelt.service.ViolationService;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -21,6 +22,8 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.block.BlockExplodeEvent;
+import org.bukkit.event.entity.EntityExplodeEvent;
 
 public final class ResourceBreakListener implements Listener {
 
@@ -153,10 +156,52 @@ public final class ResourceBreakListener implements Listener {
         }
     }
 
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onBlockExplode(BlockExplodeEvent event) {
+        protectExplosionBlockList(event.blockList());
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onEntityExplode(EntityExplodeEvent event) {
+        protectExplosionBlockList(event.blockList());
+    }
+
     private boolean shouldCancelBreak(ViolationResult violationResult) {
         return configManager.isViolationActionEnabled(ViolationAction.CANCEL_BREAK)
                 && violationResult.snapshot().currentCount()
                 >= configManager.getViolationActionAfterBlocks(ViolationAction.CANCEL_BREAK);
+    }
+
+    private void protectExplosionBlockList(List<Block> blocks) {
+        if (!shouldProtectExplosionResources()) {
+            return;
+        }
+
+        blocks.removeIf(this::shouldProtectExplosionBlock);
+    }
+
+    private boolean shouldProtectExplosionResources() {
+        return configManager.isResourceMonitorEnabled()
+                && configManager.isResourceMonitorEnforceMode()
+                && configManager.isViolationActionEnabled(ViolationAction.CANCEL_BREAK)
+                && !claimProtectionService.wouldDisableResourceMonitor();
+    }
+
+    private boolean shouldProtectExplosionBlock(Block block) {
+        World world = block.getWorld();
+        String worldName = world.getName();
+        if (!configManager.isMonitoredWorld(worldName)
+                || configManager.isIgnoredWorld(worldName)
+                || !configManager.hasResourceWorldRule(worldName)) {
+            return false;
+        }
+
+        if (resourceDetectionService.detect(world, block.getType()).isEmpty()) {
+            return false;
+        }
+
+        return !claimProtectionService.shouldSkipInsideClaims()
+                || !claimProtectionService.isInsideClaim(block.getLocation());
     }
 
     private boolean shouldEmitAudit(UUID playerId, Material material, String category) {
