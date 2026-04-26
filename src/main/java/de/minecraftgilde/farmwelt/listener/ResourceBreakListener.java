@@ -86,7 +86,7 @@ public final class ResourceBreakListener implements Listener {
             return;
         }
 
-        ResourceMatch match = resourceDetectionService.detect(world, block.getType(), block.getY()).orElse(null);
+        ResourceMatch match = resourceDetectionService.detect(world, block.getType()).orElse(null);
         if (match == null) {
             return;
         }

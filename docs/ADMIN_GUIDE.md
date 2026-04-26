@@ -73,24 +73,24 @@ Erwartung: Die GUI öffnet sich, der Spieler erhält die Teleportmeldung und Bet
 
 Erwartung: Im Claim meldet der Befehl `Position liegt in Claim: ja`, außerhalb `nein`. Außerdem sollte `/farmwelt info` `Claim-Hook aktiv: ja` melden.
 
-### Test C: Overworld-Oberfläche
+### Test C: Overworld-Ressourcen
 
 1. In einer überwachten Overworld stehen, zum Beispiel `world`.
-2. Einen Block oberhalb oder auf `sea-level` prüfen, der in `surface-resources` steht.
+2. Einen Block aus `world-rules.<welt>.resources` prüfen.
 3. `/farmwelt debug monitor` aktivieren.
 4. Block rechtsklicken.
 5. Audit, Warn oder Enforce je nach Modus prüfen.
 
-Erwartung: Kategorie ist `surface`; der Block würde vom Monitor geprüft, sofern kein Claim oder Bypass greift.
+Erwartung: Kategorie ist `overworld`; der Block würde vom Monitor geprüft, sofern kein Claim oder Bypass greift.
 
-### Test D: Overworld-Untergrund
+### Test D: Overworld-Höhencheck
 
-1. Unterhalb der konfigurierten `sea-level` testen.
-2. Einen Block aus `underground-resources` prüfen, zum Beispiel ein Erz.
+1. Einen Ressourcenblock auf unterschiedlichen Y-Höhen testen.
+2. Zum Beispiel ein Erz in einem Berg oder einen Oberflächenblock unterhalb von Y 63 prüfen.
 3. `/farmwelt debug monitor` verwenden.
 4. Danach im passenden Modus abbauen.
 
-Erwartung: Kategorie ist `underground`; Warnungen oder Blockierungen folgen nur im passenden Modus und nach den Schwellen.
+Erwartung: Die Höhe entscheidet nicht über die Erkennung. Nur die `resources`-Liste, Welt, Claim und Bypass sind relevant.
 
 ### Test E: Nether
 
@@ -128,7 +128,7 @@ Erwartung: Keine Warnung, keine Staff-Violation und kein Blockieren für diesen 
 
 ### Phase 1: Audit
 
-`mode: audit` einige Tage laufen lassen. Console-Logs und Staff-Meldungen beobachten. In dieser Phase sollen False Positives gefunden werden: falsche Weltregeln, fehlende Claim-Erkennung, falsche Seehöhe oder zu breite Materiallisten.
+`mode: audit` einige Tage laufen lassen. Console-Logs und Staff-Meldungen beobachten. In dieser Phase sollen False Positives gefunden werden: falsche Weltregeln, fehlende Claim-Erkennung oder zu breite Materiallisten.
 
 Empfohlen:
 

@@ -498,21 +498,44 @@ public final class ConfigManager {
             return new ResourceWorldRule(
                     worldName,
                     worldType,
-                    section.getInt("sea-level", 63),
-                    loadMaterialSet("resource-monitor.world-rules." + worldName + ".surface-resources", section.getStringList("surface-resources")),
-                    loadMaterialSet("resource-monitor.world-rules." + worldName + ".underground-resources", section.getStringList("underground-resources")),
-                    Set.of()
+                    loadOverworldResourceSet(worldName, section)
             );
         }
 
         return new ResourceWorldRule(
                 worldName,
                 worldType,
-                0,
-                Set.of(),
-                Set.of(),
                 loadMaterialSet("resource-monitor.world-rules." + worldName + ".resources", section.getStringList("resources"))
         );
+    }
+
+    private Set<Material> loadOverworldResourceSet(String worldName, ConfigurationSection section) {
+        Set<Material> resources = loadMaterialSet(
+                "resource-monitor.world-rules." + worldName + ".resources",
+                section.getStringList("resources")
+        );
+        if (!resources.isEmpty()) {
+            return resources;
+        }
+
+        Set<Material> surfaceResources = loadMaterialSet(
+                "resource-monitor.world-rules." + worldName + ".surface-resources",
+                section.getStringList("surface-resources")
+        );
+        Set<Material> undergroundResources = loadMaterialSet(
+                "resource-monitor.world-rules." + worldName + ".underground-resources",
+                section.getStringList("underground-resources")
+        );
+        if (surfaceResources.isEmpty() && undergroundResources.isEmpty()) {
+            return Set.of();
+        }
+
+        plugin.getLogger().warning("Ressourcenregel für Overworld '" + worldName
+                + "' nutzt alte surface-/underground-Listen. Diese werden als gemeinsame resources-Liste geladen.");
+        EnumSet<Material> combinedResources = EnumSet.noneOf(Material.class);
+        combinedResources.addAll(surfaceResources);
+        combinedResources.addAll(undergroundResources);
+        return combinedResources;
     }
 
     private Set<Material> loadMaterialSet(String configPath, List<String> materialNames) {

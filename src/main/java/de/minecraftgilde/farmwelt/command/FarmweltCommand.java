@@ -259,7 +259,7 @@ public final class FarmweltCommand implements BasicCommand, Listener {
         boolean ignoredWorld = configManager.isIgnoredWorld(worldName);
         boolean hasWorldRule = configManager.hasResourceWorldRule(worldName);
         Optional<ResourceWorldRule> worldRule = configManager.getResourceWorldRule(worldName);
-        Optional<ResourceMatch> match = resourceDetectionService.detect(world, block.getType(), block.getY());
+        Optional<ResourceMatch> match = resourceDetectionService.detect(world, block.getType());
         boolean insideClaim = claimProtectionService.isInsideClaim(block.getLocation());
         boolean skippedByClaim = claimProtectionService.shouldSkipInsideClaims() && insideClaim;
         String bypassPermission = configManager.getBypassPermission();

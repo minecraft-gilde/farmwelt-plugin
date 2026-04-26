@@ -193,7 +193,7 @@ Entscheidungsreihenfolge:
 5. Welt muss in `monitored-worlds` stehen.
 6. Welt darf nicht in `ignored-worlds` stehen.
 7. Für die Welt muss eine `world-rules`-Regel existieren.
-8. Blockmaterial und Höhe müssen zur Weltregel passen.
+8. Blockmaterial muss zur Weltregel passen.
 9. Wenn Claim-Ausnahmen aktiv sind, darf der Block nicht in einem Claim liegen.
 10. Danach wird je nach Modus Audit, Warnung, Staff-Notify oder Blockabbruch verarbeitet.
 
@@ -213,20 +213,17 @@ Weltregeln werden über `ResourceWorldRule` abgebildet. Unterstützte Typen:
 
 Overworld:
 
-- Nutzt `sea-level`.
-- Blöcke mit `y >= sea-level` werden gegen `surface-resources` geprüft.
-- Blöcke mit `y < sea-level` werden gegen `underground-resources` geprüft.
-- Treffer erhalten die Kategorie `surface` oder `underground`.
+- Prüft ausschließlich `resources`.
+- Es gibt keine Höhenprüfung.
+- Treffer erhalten die Kategorie `overworld`.
 
 Nether:
 
-- Nutzt keine Seehöhe.
 - Prüft ausschließlich `resources`.
 - Treffer erhalten die Kategorie `nether`.
 
 End:
 
-- Nutzt keine Seehöhe.
 - Prüft ausschließlich `resources`.
 - Treffer erhalten die Kategorie `end`.
 

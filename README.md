@@ -116,9 +116,7 @@ resource-monitor:
   world-rules:
     world:
       type: overworld
-      sea-level: 63
-      surface-resources: []
-      underground-resources: []
+      resources: []
 
     world_nether:
       type: nether
@@ -129,11 +127,8 @@ resource-monitor:
       resources: []
 ```
 
-- `type: overworld` nutzt `sea-level`.
-- Oberhalb oder auf Seehöhe werden nur `surface-resources` erkannt.
-- Unterhalb der Seehöhe werden nur `underground-resources` erkannt.
-- `type: nether` und `type: end` verwenden keine Seehöhe.
-- Nether und End verwenden jeweils die Liste `resources`.
+- Overworld, Nether und End verwenden jeweils die Liste `resources`.
+- Es gibt keine Höhenprüfung: Ein Material in `resources` wird auf jeder Y-Höhe erkannt.
 - Nur Materialien in diesen Listen zählen als relevante Ressourcen.
 - Eine Welt muss in `monitored-worlds` stehen und darf nicht in `ignored-worlds` stehen.
 
@@ -256,12 +251,10 @@ resource-monitor:
   world-rules:
     world:
       type: overworld
-      sea-level: 63
-      surface-resources:
+      resources:
         - OAK_LOG
         - SAND
         - GRAVEL
-      underground-resources:
         - COAL_ORE
         - IRON_ORE
         - DIAMOND_ORE
@@ -322,7 +315,6 @@ resource-monitor:
 - Welt steht in `ignored-worlds`.
 - Es gibt keine passende `world-rules`-Regel für die Welt.
 - Block ist nicht in der passenden Ressourcenliste.
-- Overworld-Block liegt auf der falschen Seite der `sea-level`.
 - Spieler hat `farmwelt.bypass`.
 - Block liegt in einem Claim und Claim-Ausnahmen sind aktiv.
 - GriefPrevention fehlt und `fail-mode: disable-monitor` deaktiviert den Monitor.

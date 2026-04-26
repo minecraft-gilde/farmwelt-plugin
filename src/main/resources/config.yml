@@ -154,8 +154,7 @@ resource-monitor:
     # Weltbezogene Ressourcenregeln. Nur Materialien in diesen Listen zaehlen als relevante Ressourcen.
     world:
       type: overworld
-      sea-level: 63
-      surface-resources:
+      resources:
         - OAK_LOG
         - SPRUCE_LOG
         - BIRCH_LOG
@@ -168,7 +167,6 @@ resource-monitor:
         - RED_SAND
         - GRAVEL
         - CLAY
-      underground-resources:
         - COAL_ORE
         - DEEPSLATE_COAL_ORE
         - IRON_ORE
