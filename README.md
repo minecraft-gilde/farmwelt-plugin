@@ -1,0 +1,362 @@
+# Farmwelt
+
+Farmwelt ist ein Paper/Folia-Plugin für Minecraft-Server. Es stellt einen zentralen `/farmwelt`-Befehl mit GUI bereit und kann Ressourcenabbau in normalen Welten erkennen, warnen und optional sichtbar blockieren.
+
+Das Plugin soll Spieler in Farmwelten lenken und Moderatoren entlasten. Es ist kein klassisches Anti-Grief-Plugin, ersetzt keine Claim-Protection und schützt keine Grundstücke. Der Ressourcenmonitor erkennt konfigurierten Ressourcenabbau in der Wildnis; Grundstücke/Claims bleiben bei aktivem GriefPrevention-Hook ausgenommen.
+
+## Hauptfunktionen
+
+- Zentrale `/farmwelt`-GUI mit konfigurierbaren Farmwelt-Einträgen.
+- Teleport über konfigurierbare Befehle, zum Beispiel BetterRTP.
+- Ressourcenmonitor für normale Welten.
+- Weltbezogene Ressourcenregeln für Overworld, Nether und End.
+- Claim-Ausnahme über GriefPrevention.
+- `audit`-Modus zum Beobachten ohne Spielerwarnung und ohne Blockieren.
+- `warn`-Modus mit Spielerwarnungen und Staff-Benachrichtigungen.
+- `enforce`-Modus mit sichtbarem Blockabbruch ab konfigurierter Schwelle.
+- Violation-Zähler mit Zeitfenster und Cooldowns.
+- `/farmwelt info`, `/farmwelt reload` und Debug-Befehle.
+- GitHub Action für den Gradle-Build.
+
+## Voraussetzungen
+
+- Paper/Folia-kompatibler Server.
+- Java 21.
+- Minecraft/Paper API 1.21.x, das Projekt baut aktuell gegen `paper-api:1.21.11-R0.1-SNAPSHOT`.
+- BetterRTP ist optional, aber für die Standard-Teleportbefehle empfohlen.
+- GriefPrevention ist optional, aber für Claim-Ausnahmen empfohlen.
+- EssentialsX ist keine Abhängigkeit.
+
+In `paper-plugin.yml` sind BetterRTP und GriefPrevention als optionale Server-Abhängigkeiten eingetragen:
+
+- `BetterRTP`: `required: false`, `join-classpath: false`.
+- `GriefPrevention`: `required: false`, `join-classpath: true`.
+
+Das Plugin startet auch ohne BetterRTP. Dann schlagen aber die standardmäßig konfigurierten BetterRTP-Befehle fehl, bis andere Teleportbefehle konfiguriert werden.
+
+## Installation
+
+1. Plugin bauen oder eine fertige JAR verwenden.
+2. Die JAR aus `build/libs/` in den `plugins`-Ordner des Servers legen.
+3. Server starten.
+4. `plugins/Farmwelt/config.yml` prüfen.
+5. BetterRTP-Ziele und Welt-Namen prüfen.
+6. GriefPrevention-Hook prüfen, falls Claim-Ausnahmen genutzt werden.
+7. `/farmwelt info` ausführen.
+8. `/farmwelt` als Spieler testen.
+
+## Build
+
+Linux/macOS:
+
+```bash
+./gradlew build
+```
+
+Windows PowerShell:
+
+```bat
+.\gradlew.bat build
+```
+
+Die Plugin-JAR wird unter `build/libs/` erzeugt. Der Archivname beginnt mit `Farmwelt`, aktuell zum Beispiel `Farmwelt-0.1.0-SNAPSHOT.jar`.
+
+## Befehle
+
+| Befehl | Zweck | Permission | Empfohlen für |
+| --- | --- | --- | --- |
+| `/farmwelt` | Öffnet die Farmwelt-GUI. | `farmwelt.use` | Spieler |
+| `/farmwelt info` | Zeigt Version, geladene Farmwelten, Monitor-Modus, Hook-Status und Jail-Modus. | `farmwelt.admin` | Admins |
+| `/farmwelt reload` | Lädt die Farmwelt-Konfiguration neu. | `farmwelt.admin` | Admins |
+| `/farmwelt debug claim` | Prüft den Claim-Provider und ob die aktuelle Spielerposition in einem Claim liegt. | `farmwelt.admin` | Admins/Technik |
+| `/farmwelt debug monitor` | Schaltet einen Debug-Modus um; danach kann ein Block per Rechtsklick geprüft werden. | `farmwelt.admin` | Admins/Technik |
+| `/farmwelt debug violations [spieler]` | Zeigt den aktuellen Violation-Status des eigenen oder eines online Spielers. | `farmwelt.admin` | Admins/Moderation |
+
+`/farmwelt info` und `/farmwelt reload` können auch aus der Konsole ausgeführt werden. Die Debug-Befehle sind Spielerbefehle, weil sie Positionen, Rechtsklicks oder online Spieler verwenden.
+
+## Permissions
+
+| Permission | Bedeutung | Empfohlene Gruppe | Hinweis |
+| --- | --- | --- | --- |
+| `farmwelt.use` | Darf `/farmwelt` verwenden. | Spieler | Standardmäßig `true`. |
+| `farmwelt.admin` | Darf Info-, Reload- und Debug-Befehle verwenden. | Admins/Technik | Standardmäßig `op`. |
+| `farmwelt.bypass` | Wird vom Ressourcenmonitor ignoriert. | Admins, ggf. Builder | Spieler mit Bypass erhalten keine Warnungen und werden nicht blockiert. |
+| `farmwelt.notify` | Erhält Staff-Benachrichtigungen. | Moderation/Admins | Wird für Audit- und Violation-Meldungen verwendet. |
+
+Die tatsächlich verwendeten Permission-Namen können für Bypass und Notify in der Config angepasst werden:
+
+```yaml
+resource-monitor:
+  bypass-permission: farmwelt.bypass
+  notify-permission: farmwelt.notify
+```
+
+## Betriebsmodi
+
+Der Modus wird über `resource-monitor.mode` gesetzt.
+
+### `audit`
+
+`audit` erkennt Ressourcenabbau, loggt Ereignisse und kann Staff informieren. Spieler werden nicht gewarnt und Blöcke werden nicht blockiert. Dieser Modus ist für die Einführung und Fehlersuche gedacht.
+
+### `warn`
+
+`warn` zählt Verstöße im konfigurierten Zeitfenster. Ab den Schwellen in `actions.warning` und `actions.notify-staff` werden Spieler gewarnt und Staff kann informiert werden. Blöcke werden nicht blockiert.
+
+### `enforce`
+
+`enforce` zählt Verstöße, warnt Spieler und kann Ressourcenabbau ab der `cancel-break`-Schwelle abbrechen. Der Abbruch ist sichtbar: Spieler erhalten eine Chat-Nachricht und optional eine Actionbar-Nachricht. Es gibt keinen Kick. Eine Jail-Eskalation ist zwar als optionale Config-Stufe vorhanden, aber standardmäßig deaktiviert und sollte nicht ohne Tests aktiviert werden.
+
+## Weltregeln
+
+Weltregeln stehen unter `resource-monitor.world-rules`.
+
+```yaml
+resource-monitor:
+  world-rules:
+    world:
+      type: overworld
+      sea-level: 63
+      surface-resources: []
+      underground-resources: []
+
+    world_nether:
+      type: nether
+      resources: []
+
+    world_the_end:
+      type: end
+      resources: []
+```
+
+- `type: overworld` nutzt `sea-level`.
+- Oberhalb oder auf Seehöhe werden nur `surface-resources` erkannt.
+- Unterhalb der Seehöhe werden nur `underground-resources` erkannt.
+- `type: nether` und `type: end` verwenden keine Seehöhe.
+- Nether und End verwenden jeweils die Liste `resources`.
+- Nur Materialien in diesen Listen zählen als relevante Ressourcen.
+- Eine Welt muss in `monitored-worlds` stehen und darf nicht in `ignored-worlds` stehen.
+
+## Claims / GriefPrevention
+
+Wenn `resource-monitor.claim-protection.enabled` aktiv ist, prüft das Plugin GriefPrevention per Hook. Entscheidend ist beim Ressourcenmonitor die Position des abgebauten Blocks, nicht die Spielerposition. Abbau innerhalb von Claims wird ignoriert, sofern `skip-inside-claims: true` gesetzt ist.
+
+Dadurch bleiben Grundstücke nutzbar und der Monitor greift vor allem in der Wildnis. Die Debug-Ausgabe `/farmwelt debug claim` prüft dagegen die aktuelle Spielerposition, damit Admins den Hook schnell testen können.
+
+Standardauszug:
+
+```yaml
+resource-monitor:
+  claim-protection:
+    enabled: true
+    provider: GriefPrevention
+    skip-inside-claims: true
+    fail-mode: disable-monitor
+    ignore-height: true
+```
+
+Bei `fail-mode: disable-monitor` bleibt der Ressourcenmonitor sicherheitshalber inaktiv, wenn der konfigurierte Claim-Provider fehlt oder nicht verfügbar ist.
+
+## BetterRTP-Integration
+
+Farmwelt implementiert keine eigene Random-Teleport-Logik. Ein Klick in der GUI führt den pro Farmwelt konfigurierten Befehl aus.
+
+Standardbeispiel:
+
+```yaml
+farmworlds:
+  overworld:
+    enabled: true
+    display-name: "Farmwelt"
+    icon: GRASS_BLOCK
+    slot: 11
+    lore:
+      - "Normale Farmwelt"
+      - "Für Holz, Sand, Erde und weitere Ressourcen"
+    teleport:
+      type: command
+      sender: player
+      command: "betterrtp:rtp world Farmwelt"
+```
+
+`sender: player` führt den Befehl als Spieler aus. Dadurch können BetterRTP-Permissions, Cooldowns und Limits normal greifen. `sender: console` ist ebenfalls implementiert und führt den Befehl über die Konsole aus; dann müssen Platzhalter und Zielbefehl entsprechend sicher konfiguriert werden.
+
+Unterstützte Platzhalter im Teleportbefehl:
+
+- `{player}`
+- `{world}` und `{display-name}`: Anzeigename des GUI-Eintrags
+- `{id}`: Config-ID des Farmwelt-Eintrags
+
+## Beispiel-Config
+
+Gekürztes Beispiel mit den wichtigsten Bereichen:
+
+```yaml
+farmworlds:
+  overworld:
+    enabled: true
+    display-name: "Farmwelt"
+    icon: GRASS_BLOCK
+    slot: 11
+    lore:
+      - "Normale Farmwelt"
+    teleport:
+      type: command
+      sender: player
+      command: "betterrtp:rtp world Farmwelt"
+
+resource-monitor:
+  enabled: true
+  mode: audit
+  monitored-worlds:
+    - world
+    - world_nether
+    - world_the_end
+  ignored-worlds:
+    - farmwelt
+    - netherfarm
+    - endfarm
+  bypass-permission: farmwelt.bypass
+  notify-permission: farmwelt.notify
+  violation-window-seconds: 600
+
+  claim-protection:
+    enabled: true
+    provider: GriefPrevention
+    skip-inside-claims: true
+    fail-mode: disable-monitor
+    ignore-height: true
+
+  audit:
+    notify-staff: true
+    log-to-console: true
+    log-cooldown-seconds: 10
+
+  actions:
+    warning:
+      enabled: true
+      after-blocks: 5
+      cooldown-seconds: 60
+      message: "&eBitte nutze für Ressourcen die Farmwelten mit &6/farmwelt&e."
+    notify-staff:
+      enabled: true
+      after-blocks: 10
+      cooldown-seconds: 60
+      message: "&e[Farmwelt] &f{player} baut Ressourcen in &7{world} &fab."
+    cancel-break:
+      enabled: true
+      after-blocks: 15
+      cooldown-seconds: 10
+      message: "&cDer Ressourcenabbau in dieser Welt ist jetzt blockiert."
+      actionbar-message: "&cRessourcenabbau blockiert! Nutze &e/farmwelt&c."
+    jail:
+      enabled: false
+      mode: notify-only
+
+  world-rules:
+    world:
+      type: overworld
+      sea-level: 63
+      surface-resources:
+        - OAK_LOG
+        - SAND
+        - GRAVEL
+      underground-resources:
+        - COAL_ORE
+        - IRON_ORE
+        - DIAMOND_ORE
+    world_nether:
+      type: nether
+      resources:
+        - NETHER_QUARTZ_ORE
+        - ANCIENT_DEBRIS
+    world_the_end:
+      type: end
+      resources:
+        - END_STONE
+        - CHORUS_PLANT
+```
+
+## Empfohlener Live-Betrieb
+
+1. Zuerst `mode: audit` verwenden.
+2. Logs und Staff-Meldungen prüfen.
+3. Weltregeln, Claim-Hook und Materiallisten korrigieren.
+4. Danach `mode: warn` aktivieren.
+5. Schwellenwerte und Cooldowns beobachten.
+6. Erst nach Tests `mode: enforce` aktivieren.
+7. Optionale harte Sanktionen wie `actions.jail` zunächst deaktiviert lassen.
+
+`enforce` sollte erst aktiviert werden, wenn die wichtigsten Welten, Claims und Ressourcenlisten auf dem Live-Setup getestet wurden.
+
+## Performance-Hinweise
+
+- Der Ressourcenmonitor reagiert nur auf Blockabbau-Events und bricht früh ab, wenn der Monitor deaktiviert ist, die Welt nicht überwacht wird oder der Spieler Bypass hat.
+- Die Materiallisten werden beim Laden der Config in Material-Sets vorbereitet und nicht pro Event aus der Config gelesen.
+- Die Claim-Prüfung erfolgt erst nach Welt-, Bypass- und Ressourcenprüfung.
+- Audit-, Warn-, Notify- und Blockiermeldungen haben konfigurierbare Cooldowns.
+- Debug-Befehle sind Diagnosewerkzeuge und sollten nur für Admins verfügbar sein.
+
+## Troubleshooting
+
+### `/farmwelt` öffnet keine GUI
+
+- Spieler hat `farmwelt.use` nicht.
+- `farmworlds` fehlt oder enthält keine aktivierten gültigen Einträge.
+- Ein Eintrag hat ein ungültiges Icon, einen ungültigen Slot oder keine Teleport-Konfiguration.
+- Es gibt Config-Fehler im Serverlog.
+
+### Klick teleportiert nicht
+
+- BetterRTP ist nicht installiert oder nicht aktiv.
+- Der konfigurierte Befehl ist falsch.
+- Der Spieler hat bei `sender: player` keine BetterRTP-Permission.
+- BetterRTP-Cooldown oder Limit blockiert den Teleport.
+- Der Weltname im BetterRTP-Befehl stimmt nicht.
+
+### Ressourcen werden nicht erkannt
+
+- `resource-monitor.enabled` ist `false`.
+- `mode` ist kein gültiger Wert (`audit`, `warn`, `enforce`).
+- Welt steht nicht in `monitored-worlds`.
+- Welt steht in `ignored-worlds`.
+- Es gibt keine passende `world-rules`-Regel für die Welt.
+- Block ist nicht in der passenden Ressourcenliste.
+- Overworld-Block liegt auf der falschen Seite der `sea-level`.
+- Spieler hat `farmwelt.bypass`.
+- Block liegt in einem Claim und Claim-Ausnahmen sind aktiv.
+- GriefPrevention fehlt und `fail-mode: disable-monitor` deaktiviert den Monitor.
+
+### Ressourcen werden in Claims erkannt
+
+- GriefPrevention ist nicht installiert oder nicht aktiv.
+- `claim-protection.enabled` ist `false`.
+- `skip-inside-claims` ist `false`.
+- `provider` ist falsch geschrieben.
+- Der Hook ist laut `/farmwelt info` nicht aktiv.
+
+### Enforce blockiert nicht
+
+- `resource-monitor.mode` ist nicht `enforce`.
+- Die `cancel-break`-Schwelle wurde noch nicht erreicht.
+- `actions.cancel-break.enabled` ist `false`.
+- Spieler hat Bypass.
+- Der Block wird nicht als Ressource erkannt.
+- Der Block liegt in einem Claim.
+
+## Entwicklungshinweise
+
+- Java/Gradle-Projekt mit Java 21 Toolchain.
+- Hauptpackage: `de.minecraftgilde.farmwelt`.
+- Hauptklasse: `FarmweltPlugin`.
+- Build: `./gradlew build` bzw. `.\gradlew.bat build`.
+- CI: `.github/workflows/build.yml` führt den Gradle-Build mit Temurin Java 21 aus.
+- Wichtige Bereiche:
+  - `command/`: `/farmwelt` und Subcommands.
+  - `gui/`: Farmwelt-GUI.
+  - `listener/`: GUI-Klicks und Ressourcenmonitor.
+  - `service/`: Teleport, Claims, Ressourcen-Erkennung, Violations, Nachrichten, Jail-Aktion.
+  - `config/`: Config-Laden und vorbereitete Regeln.
+- Falls Code-Kommentare ergänzt werden, sollen sie auf Deutsch sein.
+
+Weitere operative Details stehen in [docs/ADMIN_GUIDE.md](docs/ADMIN_GUIDE.md). Der technische Aufbau ist in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) dokumentiert.
