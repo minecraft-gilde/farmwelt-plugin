@@ -39,7 +39,9 @@ public final class FarmweltPlugin extends JavaPlugin {
         messageService = new MessageService(this, configManager);
         violationService = new ViolationService(configManager);
         jailActionService = new JailActionService(this, configManager, messageService);
-        registerCommand();
+        FarmweltCommand farmweltCommand = createFarmweltCommand();
+        registerCommand(farmweltCommand);
+        getServer().getPluginManager().registerEvents(farmweltCommand, this);
         getServer().getPluginManager().registerEvents(new FarmweltGuiListener(teleportService), this);
         getServer().getPluginManager().registerEvents(
                 new ResourceBreakListener(
@@ -69,11 +71,22 @@ public final class FarmweltPlugin extends JavaPlugin {
         violationService.reload(configManager);
     }
 
-    private void registerCommand() {
+    private FarmweltCommand createFarmweltCommand() {
+        return new FarmweltCommand(
+                this,
+                farmweltMenu,
+                claimProtectionService,
+                resourceDetectionService,
+                violationService,
+                configManager
+        );
+    }
+
+    private void registerCommand(FarmweltCommand farmweltCommand) {
         registerCommand(
                 "farmwelt",
                 "Öffnet die Farmwelt-Auswahl.",
-                new FarmweltCommand(this, farmweltMenu, claimProtectionService, violationService, configManager)
+                farmweltCommand
         );
     }
 }

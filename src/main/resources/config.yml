@@ -129,7 +129,7 @@ resource-monitor:
 
       # Mindestabstand zwischen zwei Jail-Aktionen für denselben Spieler.
       # Gilt auch für notify-only, damit Staff-Meldungen nicht gespammt werden.
-      cooldown-minutes: 30
+      cooldown-minutes: 20
 
       # true = pro violation-window-seconds maximal eine Jail-Aktion.
       # false = nach Ablauf des cooldown-minutes kann im selben Fenster erneut ausgelöst werden.
