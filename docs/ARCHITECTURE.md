@@ -184,7 +184,7 @@ Klasse:
 
 - `ResourceBreakListener`
 
-Der Ressourcenmonitor reagiert auf `BlockBreakEvent`, `BlockExplodeEvent` und `EntityExplodeEvent` mit `ignoreCancelled = true`. Bereits von anderen Plugins abgebrochene Events werden nicht verarbeitet.
+Der Ressourcenmonitor reagiert auf `BlockBreakEvent`, `EntityDamageByEntityEvent`, `HangingBreakEvent`, `BlockExplodeEvent` und `EntityExplodeEvent` mit `ignoreCancelled = true`. Bereits von anderen Plugins abgebrochene Events werden nicht verarbeitet. `EntityDamageByEntityEvent` deckt geschützte Item-Frame-Loots wie Elytren in End-City-Schiffen ab; `HangingBreakEvent` verhindert im `enforce`-Modus, dass geschützte Item Frames indirekt zerstört werden.
 
 Entscheidungsreihenfolge:
 
@@ -195,13 +195,13 @@ Entscheidungsreihenfolge:
 5. Welt muss in `monitored-worlds` stehen.
 6. Welt darf nicht in `ignored-worlds` stehen.
 7. Für die Welt muss eine `world-rules`-Regel existieren.
-8. Blockmaterial muss zur Weltregel passen.
-9. Wenn Claim-Ausnahmen aktiv sind, darf der Block nicht in einem Claim liegen.
+8. Blockmaterial muss zur Weltregel passen, oder Item-Loot muss in `protected-items` stehen.
+9. Wenn Claim-Ausnahmen aktiv sind, darf die Block- bzw. Item-Frame-Position nicht in einem Claim liegen.
 10. Danach wird je nach Modus Audit, Warnung, Staff-Notify oder Blockabbruch verarbeitet.
 
 Diese Reihenfolge ist wichtig: Teurere Prüfungen wie Claims passieren erst, nachdem einfache Ausschlussgründe erledigt sind.
 
-Im `enforce`-Modus schützt der Listener zusätzlich Ressourcenblöcke vor indirekter Zerstörung durch Explosionen. Dafür wird die `blockList()` des Explosions-Events gefiltert: erkannte Ressourcenblöcke werden entfernt, die Explosion selbst wird aber nicht komplett abgebrochen. Der Explosionsschutz ist aktiv, wenn der Ressourcenmonitor im `enforce`-Modus läuft und `actions.cancel-break.enabled` aktiv ist.
+Im `enforce`-Modus schützt der Listener zusätzlich Ressourcenblöcke vor indirekter Zerstörung durch Explosionen. Dafür wird die `blockList()` des Explosions-Events gefiltert: erkannte Ressourcenblöcke werden entfernt, die Explosion selbst wird aber nicht komplett abgebrochen. Der Explosionsschutz ist aktiv, wenn der Ressourcenmonitor im `enforce`-Modus läuft und `actions.cancel-break.enabled` aktiv ist. Geschützte Item-Frame-Loots werden in `enforce` sofort blockiert, da sie einzelne hochwertige Loot-Aktionen statt fortlaufenden Blockabbaus sind.
 
 ## Weltregeln und ResourceDetectionService
 
@@ -230,8 +230,9 @@ End:
 
 - Prüft ausschließlich `resources`.
 - Treffer erhalten die Kategorie `end`.
+- `protected-items` schützt Item-Frame-Loot wie `ELYTRA`; Treffer erhalten die Kategorie `end-loot`.
 
-Wenn keine Regel existiert oder das Material nicht in der passenden Liste steht, wird kein Ressourcen-Treffer erzeugt.
+Wenn keine Regel existiert oder das Material weder in `resources` noch als passender Item-Loot in `protected-items` steht, wird kein Ressourcen-Treffer erzeugt.
 
 ## Claim-Architektur
 

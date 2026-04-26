@@ -498,14 +498,16 @@ public final class ConfigManager {
             return new ResourceWorldRule(
                     worldName,
                     worldType,
-                    loadOverworldResourceSet(worldName, section)
+                    loadOverworldResourceSet(worldName, section),
+                    loadProtectedItemSet(worldName, section)
             );
         }
 
         return new ResourceWorldRule(
                 worldName,
                 worldType,
-                loadMaterialSet("resource-monitor.world-rules." + worldName + ".resources", section.getStringList("resources"))
+                loadMaterialSet("resource-monitor.world-rules." + worldName + ".resources", section.getStringList("resources")),
+                loadProtectedItemSet(worldName, section)
         );
     }
 
@@ -538,7 +540,19 @@ public final class ConfigManager {
         return combinedResources;
     }
 
+    private Set<Material> loadProtectedItemSet(String worldName, ConfigurationSection section) {
+        return loadMaterialSet(
+                "resource-monitor.world-rules." + worldName + ".protected-items",
+                section.getStringList("protected-items"),
+                false
+        );
+    }
+
     private Set<Material> loadMaterialSet(String configPath, List<String> materialNames) {
+        return loadMaterialSet(configPath, materialNames, true);
+    }
+
+    private Set<Material> loadMaterialSet(String configPath, List<String> materialNames, boolean requireBlock) {
         EnumSet<Material> materials = EnumSet.noneOf(Material.class);
         for (String materialName : materialNames) {
             if (materialName == null || materialName.isBlank()) {
@@ -547,7 +561,7 @@ public final class ConfigManager {
 
             String normalizedName = materialName.trim().toUpperCase(Locale.ROOT);
             Material material = Material.matchMaterial(normalizedName);
-            if (material == null || !material.isBlock()) {
+            if (material == null || (requireBlock && !material.isBlock()) || (!requireBlock && !material.isItem())) {
                 plugin.getLogger().warning("Ungültiges Material in " + configPath + ": " + materialName);
                 continue;
             }

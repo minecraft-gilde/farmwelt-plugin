@@ -106,6 +106,8 @@ Der Modus wird über `resource-monitor.mode` gesetzt.
 
 ### `enforce`
 
+Geschützte Item-Loots aus `protected-items`, zum Beispiel Elytren in End-City-Item-Frames, werden in `enforce` sofort blockiert, wenn `actions.cancel-break.enabled` aktiv ist.
+
 `enforce` zählt Verstöße, warnt Spieler und kann Ressourcenabbau ab der `cancel-break`-Schwelle abbrechen. Zusätzlich entfernt der Ressourcenmonitor erkannte Ressourcenblöcke aus Explosionslisten, wenn `actions.cancel-break.enabled` aktiv ist. Explosionen selbst werden dabei nicht komplett abgebrochen; nur die geschützten Ressourcen bleiben stehen. Es gibt keinen Kick. Eine Jail-Eskalation ist zwar als optionale Config-Stufe vorhanden, aber standardmäßig deaktiviert und sollte nicht ohne Tests aktiviert werden.
 
 ## Weltregeln
@@ -125,10 +127,13 @@ resource-monitor:
 
     world_the_end:
       type: end
+      protected-items:
+        - ELYTRA
       resources: []
 ```
 
 - Overworld, Nether und End verwenden jeweils die Liste `resources`.
+- `protected-items` schützt Item-Loot aus Item Frames in überwachten Welten. Die Standardconfig nutzt das für Elytren im normalen End.
 - Es gibt keine Höhenprüfung: Ein Material in `resources` wird auf jeder Y-Höhe erkannt.
 - Nur Materialien in diesen Listen zählen als relevante Ressourcen.
 - Eine Welt muss in `monitored-worlds` stehen und darf nicht in `ignored-worlds` stehen.
@@ -273,6 +278,8 @@ resource-monitor:
         - GLOWSTONE
     world_the_end:
       type: end
+      protected-items:
+        - ELYTRA
       resources:
         - END_STONE
         - CHORUS_PLANT

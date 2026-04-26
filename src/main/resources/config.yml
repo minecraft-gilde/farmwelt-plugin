@@ -64,8 +64,8 @@ resource-monitor:
   # Spieler mit dieser Permission erhalten Staff-Benachrichtigungen.
   notify-permission: farmwelt.notify
 
-  # Zeitraum, in dem relevante Abbauten pro Spieler gezaehlt werden.
-  # Nach Ablauf startet der Zaehler beim naechsten Treffer wieder bei 1.
+  # Zeitraum, in dem relevante Abbauten pro Spieler gezählt werden.
+  # Nach Ablauf startet der Zähler beim nächsten Treffer wieder bei 1.
   violation-window-seconds: 600
 
   claim-protection:
@@ -94,7 +94,7 @@ resource-monitor:
       cooldown-seconds: 60
       message: "&eBitte nutze für Ressourcen die Farmwelten mit &6/farmwelt&e."
 
-    # Staff-Notify unter actions nutzt den Violation-Zaehler und die after-blocks-Schwelle.
+    # Staff-Notify unter actions nutzt den Violation-Zähler und die after-blocks-Schwelle.
     # Das ist getrennt vom audit.notify-staff, das nur das reine Audit-Verhalten steuert.
     notify-staff:
       enabled: true
@@ -109,7 +109,7 @@ resource-monitor:
       message: "&cDer Ressourcenabbau in dieser Welt ist jetzt blockiert. Bitte nutze die Farmwelten mit &e/farmwelt&c."
       actionbar-message: "&cRessourcenabbau blockiert! Nutze &e/farmwelt&c."
 
-    # Optionale letzte Stufe nach tatsaechlich blockierten Abbauversuchen.
+    # Optionale letzte Stufe nach tatsächlich blockierten Abbauversuchen.
     # Wichtig: Jail nutzt NICHT den normalen Verstöße-Zähler, sondern nur blocked-count.
     # blocked-count steigt nur, wenn enforce aktiv ist und der Blockabbau wirklich abgebrochen wurde.
     jail:
@@ -140,7 +140,7 @@ resource-monitor:
       # Platzhalter: {player}, {uuid}, {world}, {x}, {y}, {z}, {block}, {category}, {count}, {blocked-count}, {window-seconds}
       command: "jail {player} mgpd 30min"
 
-      # true = Spieler mit notify-permission erhalten bei Ausloesung eine Meldung.
+      # true = Spieler mit notify-permission erhalten bei Auslösung eine Meldung.
       notify-staff: true
 
       # Staff-Meldung für notify-only und execute-command.
@@ -151,13 +151,13 @@ resource-monitor:
       player-message: "&cDu wurdest wegen wiederholtem Ressourcenabbau in der Hauptwelt ins Gefängnis gesetzt."
 
   world-rules:
-    # Weltbezogene Ressourcenregeln. Nur Materialien in diesen Listen zaehlen als relevante Ressourcen.
-    # Die Standardlisten sind absichtlich breit, damit Spieler nicht auf alternative Naturbloecke ausweichen.
-    # Entferne Materialien, die in deiner Hauptwelt ausdruecklich normal bebaut oder abgebaut werden duerfen.
+    # Weltbezogene Ressourcenregeln. Nur Materialien in diesen Listen zählen als relevante Ressourcen.
+    # Die Standardlisten sind absichtlich breit, damit Spieler nicht auf alternative Naturblöcke ausweichen.
+    # Entferne Materialien, die in deiner Hauptwelt ausdrücklich normal bebaut oder abgebaut werden dürfen.
     world:
       type: overworld
       resources:
-        # Natuerlich generierte Holz-/Stammressourcen aus allen Biomen.
+        # Natürlich generierte Holz-/Stammressourcen aus allen Biomen.
         - OAK_LOG
         - SPRUCE_LOG
         - BIRCH_LOG
@@ -331,8 +331,11 @@ resource-monitor:
 
     world_the_end:
       type: end
+      protected-items:
+        # Elytren stehen in End-City-Schiffen in Item Frames und sind kein Blockabbau.
+        - ELYTRA
       resources:
-        # End-Inseln, Obsidian-Tuerme und End-City-Ressourcen.
+        # End-Inseln, Obsidian-Türme und End-City-Ressourcen.
         - END_STONE
         - END_STONE_BRICKS
         - END_STONE_BRICK_SLAB

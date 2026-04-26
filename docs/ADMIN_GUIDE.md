@@ -108,6 +108,15 @@ Erwartung: Kategorie ist `nether`; nur die `resources`-Liste entscheidet.
 
 Erwartung: Kategorie ist `end`; nur die `resources`-Liste entscheidet.
 
+### Test F2: End-Loot / Elytra
+
+1. In einer überwachten End-Welt testen, zum Beispiel `world_the_end`.
+2. Sicherstellen, dass `world-rules.world_the_end.protected-items` `ELYTRA` enthält.
+3. Im `audit`- oder `warn`-Modus ein End-City-Item-Frame mit Elytra anschlagen.
+4. Im `enforce`-Modus denselben Versuch wiederholen.
+
+Erwartung: In `audit`/`warn` wird der Versuch als Kategorie `end-loot` erkannt. In `enforce` wird die Elytra-Entnahme sofort blockiert, sofern `actions.cancel-break.enabled` aktiv ist.
+
 ### Test G: Claim-Ausnahme
 
 1. Einen Claim in einer überwachten Welt nutzen.

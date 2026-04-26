@@ -29,6 +29,20 @@ public final class ResourceDetectionService {
         return detect(rule.get(), material);
     }
 
+    public Optional<ResourceMatch> detectProtectedItem(World world, Material material) {
+        if (world == null || material == null) {
+            return Optional.empty();
+        }
+
+        Optional<ResourceWorldRule> rule = configManager.getResourceWorldRule(world.getName());
+        if (rule.isEmpty() || !rule.get().getProtectedItems().contains(material)) {
+            return Optional.empty();
+        }
+
+        ResourceWorldType type = rule.get().getType();
+        return Optional.of(new ResourceMatch(type, type.getConfigValue() + "-loot", material));
+    }
+
     private Optional<ResourceMatch> detect(ResourceWorldRule rule, Material material) {
         ResourceWorldType type = rule.getType();
         return switch (type) {
