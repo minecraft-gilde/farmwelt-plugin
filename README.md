@@ -132,6 +132,7 @@ resource-monitor:
 - Es gibt keine Höhenprüfung: Ein Material in `resources` wird auf jeder Y-Höhe erkannt.
 - Nur Materialien in diesen Listen zählen als relevante Ressourcen.
 - Eine Welt muss in `monitored-worlds` stehen und darf nicht in `ignored-worlds` stehen.
+- Die Standardconfig nutzt bewusst breite Materiallisten für Minecraft/Paper 1.21.11, unter anderem Holz/Stämme, Erze, Amethyst, Sand/Gravel/Clay/Mud, Terracotta, Eis, Nether- und End-Ressourcen. Entferne Materialien, die in deiner Hauptwelt ausdrücklich erlaubt sein sollen.
 
 ## Claims / GriefPrevention
 
@@ -254,16 +255,22 @@ resource-monitor:
       type: overworld
       resources:
         - OAK_LOG
+        - PALE_OAK_LOG
         - SAND
         - GRAVEL
+        - MUD
         - COAL_ORE
+        - DEEPSLATE_COAL_ORE
         - IRON_ORE
         - DIAMOND_ORE
+        - AMETHYST_CLUSTER
     world_nether:
       type: nether
       resources:
+        - NETHERRACK
         - NETHER_QUARTZ_ORE
         - ANCIENT_DEBRIS
+        - GLOWSTONE
     world_the_end:
       type: end
       resources:

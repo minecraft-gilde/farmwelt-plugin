@@ -96,6 +96,8 @@ Wichtige Aufgaben:
 
 Die Materiallisten werden dadurch nicht bei jedem Blockabbau aus der Config gelesen. Ungültige Materialien werden beim Laden geloggt und ignoriert.
 
+Die ausgelieferte Standardconfig verwendet bewusst breite Ressourcenlisten auf Basis der Paper-API 1.21.11. Sie decken typische natürliche Farmressourcen wie Holz, Erze, Amethyst, Sand/Gravel/Clay/Mud, Terracotta, Eis, Nether- und End-Blöcke ab. Serverbetreiber können diese Listen enger ziehen, wenn einzelne Materialien in Hauptwelten erlaubt bleiben sollen.
+
 ## Command-System
 
 `FarmweltCommand` implementiert den zentralen Befehl `/farmwelt`.

@@ -152,9 +152,12 @@ resource-monitor:
 
   world-rules:
     # Weltbezogene Ressourcenregeln. Nur Materialien in diesen Listen zaehlen als relevante Ressourcen.
+    # Die Standardlisten sind absichtlich breit, damit Spieler nicht auf alternative Naturbloecke ausweichen.
+    # Entferne Materialien, die in deiner Hauptwelt ausdruecklich normal bebaut oder abgebaut werden duerfen.
     world:
       type: overworld
       resources:
+        # Natuerlich generierte Holz-/Stammressourcen aus allen Biomen.
         - OAK_LOG
         - SPRUCE_LOG
         - BIRCH_LOG
@@ -163,10 +166,96 @@ resource-monitor:
         - DARK_OAK_LOG
         - MANGROVE_LOG
         - CHERRY_LOG
+        - PALE_OAK_LOG
+        - STRIPPED_OAK_LOG
+        - STRIPPED_SPRUCE_LOG
+        - STRIPPED_BIRCH_LOG
+        - STRIPPED_JUNGLE_LOG
+        - STRIPPED_ACACIA_LOG
+        - STRIPPED_DARK_OAK_LOG
+        - STRIPPED_MANGROVE_LOG
+        - STRIPPED_CHERRY_LOG
+        - STRIPPED_PALE_OAK_LOG
+        - MANGROVE_ROOTS
+        - MUDDY_MANGROVE_ROOTS
+        - BAMBOO
+        - BROWN_MUSHROOM_BLOCK
+        - RED_MUSHROOM_BLOCK
+        - MUSHROOM_STEM
+
+        # Oberflächen- und Bauressourcen aus natürlichen Biomen.
         - SAND
         - RED_SAND
+        - SANDSTONE
+        - RED_SANDSTONE
         - GRAVEL
+        - SUSPICIOUS_SAND
+        - SUSPICIOUS_GRAVEL
         - CLAY
+        - MUD
+        - PACKED_MUD
+        - COARSE_DIRT
+        - ROOTED_DIRT
+        - PODZOL
+        - MYCELIUM
+        - MOSS_BLOCK
+        - MOSS_CARPET
+        - PALE_MOSS_BLOCK
+        - PALE_MOSS_CARPET
+        - PALE_HANGING_MOSS
+        - TERRACOTTA
+        - WHITE_TERRACOTTA
+        - ORANGE_TERRACOTTA
+        - MAGENTA_TERRACOTTA
+        - LIGHT_BLUE_TERRACOTTA
+        - YELLOW_TERRACOTTA
+        - LIME_TERRACOTTA
+        - PINK_TERRACOTTA
+        - GRAY_TERRACOTTA
+        - LIGHT_GRAY_TERRACOTTA
+        - CYAN_TERRACOTTA
+        - PURPLE_TERRACOTTA
+        - BLUE_TERRACOTTA
+        - BROWN_TERRACOTTA
+        - GREEN_TERRACOTTA
+        - RED_TERRACOTTA
+        - BLACK_TERRACOTTA
+        - ICE
+        - PACKED_ICE
+        - BLUE_ICE
+        - SNOW_BLOCK
+        - POWDER_SNOW
+        - DRIPSTONE_BLOCK
+        - POINTED_DRIPSTONE
+        - CALCITE
+        - TUFF
+        - DEEPSLATE
+        - COBBLED_DEEPSLATE
+        - REINFORCED_DEEPSLATE
+        - GRANITE
+        - DIORITE
+        - ANDESITE
+        - SCULK
+        - SCULK_VEIN
+        - SCULK_CATALYST
+        - SCULK_SENSOR
+        - SCULK_SHRIEKER
+        - PRISMARINE
+        - DARK_PRISMARINE
+        - SEA_LANTERN
+        - SPONGE
+        - WET_SPONGE
+        - PUMPKIN
+        - MELON
+        - CACTUS
+        - SUGAR_CANE
+        - VINE
+        - GLOW_LICHEN
+        - RESIN_CLUMP
+        - RESIN_BLOCK
+        - CREAKING_HEART
+
+        # Alle Overworld-Erze und Amethyst-Varianten.
         - COAL_ORE
         - DEEPSLATE_COAL_ORE
         - IRON_ORE
@@ -183,10 +272,18 @@ resource-monitor:
         - DEEPSLATE_DIAMOND_ORE
         - EMERALD_ORE
         - DEEPSLATE_EMERALD_ORE
+        - AMETHYST_BLOCK
+        - BUDDING_AMETHYST
+        - SMALL_AMETHYST_BUD
+        - MEDIUM_AMETHYST_BUD
+        - LARGE_AMETHYST_BUD
+        - AMETHYST_CLUSTER
 
     world_nether:
       type: nether
       resources:
+        # Nether-Erze, Baumvarianten und natürliche Nether-Ressourcen.
+        - NETHERRACK
         - NETHER_QUARTZ_ORE
         - NETHER_GOLD_ORE
         - ANCIENT_DEBRIS
@@ -194,12 +291,60 @@ resource-monitor:
         - SOUL_SAND
         - SOUL_SOIL
         - BASALT
+        - SMOOTH_BASALT
+        - POLISHED_BASALT
         - BLACKSTONE
+        - GILDED_BLACKSTONE
+        - MAGMA_BLOCK
+        - GRAVEL
+        - NETHER_WART_BLOCK
+        - WARPED_WART_BLOCK
+        - SHROOMLIGHT
+        - DRIED_GHAST
+        - CRIMSON_NYLIUM
+        - WARPED_NYLIUM
+        - CRIMSON_FUNGUS
+        - WARPED_FUNGUS
+        - CRIMSON_STEM
+        - WARPED_STEM
+        - STRIPPED_CRIMSON_STEM
+        - STRIPPED_WARPED_STEM
+        - CRIMSON_ROOTS
+        - WARPED_ROOTS
+        - NETHER_SPROUTS
+        - WEEPING_VINES
+        - WEEPING_VINES_PLANT
+        - TWISTING_VINES
+        - TWISTING_VINES_PLANT
+        - NETHER_WART
+        - BONE_BLOCK
+        - OBSIDIAN
+        - CRYING_OBSIDIAN
+        - NETHER_BRICKS
+        - NETHER_BRICK_FENCE
+        - NETHER_BRICK_SLAB
+        - NETHER_BRICK_STAIRS
+        - NETHER_BRICK_WALL
+        - CRACKED_NETHER_BRICKS
+        - CHISELED_NETHER_BRICKS
+        - RED_NETHER_BRICKS
 
     world_the_end:
       type: end
       resources:
+        # End-Inseln, Obsidian-Tuerme und End-City-Ressourcen.
         - END_STONE
+        - END_STONE_BRICKS
+        - END_STONE_BRICK_SLAB
+        - END_STONE_BRICK_STAIRS
+        - END_STONE_BRICK_WALL
         - CHORUS_FLOWER
         - CHORUS_PLANT
         - OBSIDIAN
+        - DRAGON_EGG
+        - PURPUR_BLOCK
+        - PURPUR_PILLAR
+        - PURPUR_SLAB
+        - PURPUR_STAIRS
+        - END_ROD
+        - DRAGON_HEAD
