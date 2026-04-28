@@ -1,0 +1,70 @@
+name: Release
+
+on:
+  release:
+    types:
+      - published
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing release tag to rebuild, for example v0.1.0
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  build-release:
+    name: Build and upload release JAR
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Prepare release metadata
+        id: release
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+          INPUT_TAG: ${{ inputs.tag }}
+        run: |
+          TAG_NAME="${RELEASE_TAG:-$INPUT_TAG}"
+          VERSION="${TAG_NAME#v}"
+          if [ -z "$TAG_NAME" ] || [ -z "$VERSION" ]; then
+            echo "Could not determine release tag." >&2
+            exit 1
+          fi
+          echo "tag=$TAG_NAME" >> "$GITHUB_OUTPUT"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "asset_name=Farmwelt-$VERSION.jar" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.release.outputs.tag }}
+
+      - name: Validate Gradle wrapper
+        uses: gradle/actions/wrapper-validation@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Make Gradle wrapper executable
+        run: chmod +x ./gradlew
+
+      - name: Build release JAR
+        run: ./gradlew clean build -PreleaseVersion="${{ steps.release.outputs.version }}" --no-daemon
+
+      - name: Prepare release asset
+        run: |
+          mkdir -p release
+          cp "build/libs/${{ steps.release.outputs.asset_name }}" "release/${{ steps.release.outputs.asset_name }}"
+
+      - name: Upload release asset
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "${{ steps.release.outputs.tag }}" "release/${{ steps.release.outputs.asset_name }}" --clobber

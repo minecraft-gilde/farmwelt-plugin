@@ -62,6 +62,12 @@ Windows PowerShell:
 
 Die Plugin-JAR wird unter `build/libs/` erzeugt. Der Archivname beginnt mit `Farmwelt`, aktuell zum Beispiel `Farmwelt-0.1.0-SNAPSHOT.jar`.
 
+## Release
+
+GitHub Actions baut automatisch eine Release-JAR, wenn ein GitHub Release veröffentlicht wird. Der Workflow `.github/workflows/release.yml` verwendet den Release-Tag als Plugin-Version und lädt die fertige JAR direkt als Asset in den GitHub Release hoch.
+
+Die vollständige Reihenfolge mit Befehlen steht in [docs/RELEASE.md](docs/RELEASE.md).
+
 ## Befehle
 
 | Befehl | Zweck | Permission | Empfohlen für |
@@ -369,6 +375,7 @@ resource-monitor:
 - Hauptklasse: `FarmweltPlugin`.
 - Build: `./gradlew build` bzw. `.\gradlew.bat build`.
 - CI: `.github/workflows/build.yml` führt den Gradle-Build mit Temurin Java 21 aus.
+- Release: `.github/workflows/release.yml` baut bei veröffentlichten GitHub Releases eine JAR und lädt sie als Release-Asset hoch.
 - Wichtige Bereiche:
   - `command/`: `/farmwelt` und Subcommands.
   - `gui/`: Farmwelt-GUI.
