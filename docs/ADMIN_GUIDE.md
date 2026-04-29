@@ -30,6 +30,9 @@ resource-monitor:
   mode: audit
   violation-window-seconds: 600
 
+  audit:
+    log-cooldown-seconds: 120
+
   actions:
     warning:
       enabled: true
@@ -152,7 +155,7 @@ Empfohlen:
 
 - `audit.log-to-console: true`
 - `audit.notify-staff: true`
-- `audit.log-cooldown-seconds` nicht zu niedrig setzen
+- `audit.log-cooldown-seconds` nicht zu niedrig setzen; `120` Sekunden ist ein sinnvoller Startwert für Live-Audit
 - `actions.jail.enabled: false`
 - Die breiten 1.21.11-Standardlisten bewusst prüfen und Materialien entfernen, die in der Hauptwelt erlaubt bleiben sollen.
 

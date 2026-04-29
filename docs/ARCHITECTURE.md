@@ -461,7 +461,7 @@ In-Memory-Daten:
 - Geladene Farmwelt-Menüeinträge.
 - Geladene Ressourcenregeln.
 - Violation-Datensätze pro Spieler.
-- Audit-Cooldown-Zeitpunkte.
+- Audit-Cooldown-Zeitpunkte pro Spieler, Material und Kategorie. Wiederholte Audit-Treffer setzen den Zeitpunkt auch dann neu, wenn keine Meldung ausgegeben wird.
 - Aktive Monitor-Debug-Spieler.
 
 Diese Daten gehen bei Serverneustart verloren. Das ist für die aktuelle Funktion beabsichtigt.

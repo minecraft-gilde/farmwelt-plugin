@@ -83,7 +83,8 @@ resource-monitor:
     notify-staff: true
     log-to-console: true
     staff-message: "&e[Farmwelt-Audit] &f{player} hat &c{block} &fin &7{world} &fbei &7{x} {y} {z} &fabgebaut. Kategorie: &7{category}"
-    log-cooldown-seconds: 10
+    # Pro Spieler, Material und Kategorie. Wiederholte Treffer setzen die Ruhezeit zurück.
+    log-cooldown-seconds: 120
 
   actions:
     # Actions sind einzelne Eskalationsstufen. Sie werden nur ausgeführt, wenn der mode sie erlaubt.

@@ -25,6 +25,7 @@ public final class ConfigManager {
     public static final int FARMWELT_MENU_SIZE = 45;
     public static final int FARMWELT_MENU_CONTENT_SIZE = 27;
     public static final int FARMWELT_MENU_CONTENT_OFFSET = 9;
+    private static final int DEFAULT_AUDIT_LOG_COOLDOWN_SECONDS = 120;
 
     private final JavaPlugin plugin;
     private List<FarmweltMenuItem> farmweltMenuItems = List.of();
@@ -37,7 +38,7 @@ public final class ConfigManager {
     private boolean auditNotifyStaff = true;
     private boolean auditLogToConsole = true;
     private String staffMessage = "&e[Farmwelt-Audit] &f{player} hat &c{block} &fin &7{world} &fbei &7{x} {y} {z} &fabgebaut. Kategorie: &7{category}";
-    private int auditLogCooldownSeconds = 10;
+    private int auditLogCooldownSeconds = DEFAULT_AUDIT_LOG_COOLDOWN_SECONDS;
     private int violationWindowSeconds = 600;
     private Map<ViolationAction, ViolationActionConfig> violationActionConfigs = Map.of();
     private JailActionConfig jailActionConfig = createDefaultJailActionConfig();
@@ -100,7 +101,10 @@ public final class ConfigManager {
             auditNotifyStaff = auditSection.getBoolean("notify-staff", true);
             auditLogToConsole = auditSection.getBoolean("log-to-console", true);
             staffMessage = auditSection.getString("staff-message", staffMessage);
-            auditLogCooldownSeconds = Math.max(0, auditSection.getInt("log-cooldown-seconds", 10));
+            auditLogCooldownSeconds = Math.max(
+                    0,
+                    auditSection.getInt("log-cooldown-seconds", DEFAULT_AUDIT_LOG_COOLDOWN_SECONDS)
+            );
         }
 
         resourceWorldRules = loadResourceWorldRules(section.getConfigurationSection("world-rules"));

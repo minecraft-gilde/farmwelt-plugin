@@ -334,10 +334,9 @@ public final class ResourceBreakListener implements Listener {
         cooldowns.compute(key, (ignored, lastLogTime) -> {
             if (lastLogTime == null || now - lastLogTime >= cooldownMillis) {
                 allowed.set(true);
-                return now;
             }
 
-            return lastLogTime;
+            return now;
         });
         return allowed.get();
     }

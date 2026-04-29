@@ -238,7 +238,7 @@ resource-monitor:
   audit:
     notify-staff: true
     log-to-console: true
-    log-cooldown-seconds: 10
+    log-cooldown-seconds: 120
 
   actions:
     warning:
@@ -310,7 +310,7 @@ resource-monitor:
 - Der Ressourcenmonitor bricht früh ab, wenn der Monitor deaktiviert ist, die Welt nicht überwacht wird oder der Spieler Bypass hat.
 - Die Materiallisten werden beim Laden der Config in Material-Sets vorbereitet und nicht pro Event aus der Config gelesen.
 - Die Claim-Prüfung erfolgt erst nach Welt-, Bypass- und Ressourcenprüfung.
-- Audit-, Warn-, Notify- und Blockiermeldungen haben konfigurierbare Cooldowns.
+- Audit-, Warn-, Notify- und Blockiermeldungen haben konfigurierbare Cooldowns. Der Audit-Cooldown gilt pro Spieler, Material und Kategorie; wiederholte Treffer setzen die Ruhezeit zurück.
 - Debug-Befehle sind Diagnosewerkzeuge und sollten nur für Admins verfügbar sein.
 
 ## Troubleshooting
