@@ -10,7 +10,7 @@ farmworlds:
     teleport:
       type: command
       sender: player
-      command: "betterrtp:rtp world Farmwelt"
+      command: "betterrtp:rtp world farmwelt"
 
   nether:
     enabled: true
@@ -22,7 +22,7 @@ farmworlds:
     teleport:
       type: command
       sender: player
-      command: "betterrtp:rtp world Netherfarm"
+      command: "betterrtp:rtp world netherfarm"
 
   end:
     enabled: true
@@ -34,7 +34,7 @@ farmworlds:
     teleport:
       type: command
       sender: player
-      command: "betterrtp:rtp world Endfarm"
+      command: "betterrtp:rtp world endfarm"
 
 resource-monitor:
   # Schaltet den Ressourcenmonitor insgesamt ein oder aus.
