@@ -2,6 +2,7 @@ name: Farmwelt
 version: ${version}
 main: de.minecraftgilde.farmwelt.FarmweltPlugin
 api-version: "1.21"
+author: CFPlusPlus
 folia-supported: true
 description: Farmwelt-System für den Minecraft-Gilde-Server.
 dependencies:
