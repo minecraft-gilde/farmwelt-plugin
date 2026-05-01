@@ -5,7 +5,7 @@ plugins {
 group = "de.minecraftgilde"
 
 val releaseVersion = providers.gradleProperty("releaseVersion")
-    .orElse("1.0.1-SNAPSHOT")
+    .orElse("1.0.2-SNAPSHOT")
 
 version = releaseVersion.get()
 
