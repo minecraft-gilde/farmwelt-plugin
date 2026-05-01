@@ -221,7 +221,6 @@ resource-monitor:
         - GREEN_TERRACOTTA
         - RED_TERRACOTTA
         - BLACK_TERRACOTTA
-        - ICE
         - PACKED_ICE
         - BLUE_ICE
         - SNOW_BLOCK
