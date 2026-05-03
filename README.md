@@ -1,5 +1,13 @@
 # Farmwelt
 
+[![CI](https://img.shields.io/github/actions/workflow/status/minecraft-gilde/farmwelt-plugin/build.yml?branch=main&label=build)](https://github.com/minecraft-gilde/farmwelt-plugin/actions/workflows/build.yml)
+[![Release](https://img.shields.io/github/v/release/minecraft-gilde/farmwelt-plugin?label=release)](https://github.com/minecraft-gilde/farmwelt-plugin/releases)
+[![License](https://img.shields.io/github/license/minecraft-gilde/farmwelt-plugin)](LICENSE)
+![Java](https://img.shields.io/badge/Java-21-orange)
+![Paper](https://img.shields.io/badge/Paper-1.21.x-blue)
+![Folia](https://img.shields.io/badge/Folia-supported-brightgreen)
+[![Discord](https://img.shields.io/badge/Discord-Join-5865F2?logo=discord&logoColor=white)](https://discord.minecraft-gilde.de)
+
 Farmwelt ist ein Paper/Folia-Plugin für Minecraft-Server. Es stellt einen zentralen `/farmwelt`-Befehl mit GUI bereit und kann Ressourcenabbau in normalen Welten erkennen, warnen und optional sichtbar blockieren.
 
 Das Plugin soll Spieler in Farmwelten lenken und Moderatoren entlasten. Es ist kein klassisches Anti-Grief-Plugin, ersetzt keine Claim-Protection und schützt keine Grundstücke. Der Ressourcenmonitor erkennt konfigurierten Ressourcenabbau in der Wildnis; Grundstücke/Claims bleiben bei aktivem GriefPrevention-Hook ausgenommen.
