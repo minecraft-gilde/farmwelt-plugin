@@ -5,7 +5,7 @@ plugins {
 group = "de.minecraftgilde"
 
 val releaseVersion = providers.gradleProperty("releaseVersion")
-    .orElse("2.0.1-SNAPSHOT")
+    .orElse("2.1.0-SNAPSHOT")
 
 version = releaseVersion.get()
 
@@ -44,6 +44,7 @@ tasks.withType<JavaCompile>().configureEach {
 }
 
 tasks.processResources {
+    inputs.property("pluginVersion", pluginVersion)
     filteringCharset = "UTF-8"
     filesMatching("paper-plugin.yml") {
         expand("version" to pluginVersion)
