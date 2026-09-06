@@ -182,6 +182,16 @@ Während `/farmwelt reset force overworld` sichtbar läuft, denselben Command un
 
 Während derselben offenen Pipeline über das bestehende 45-Slot-Farmwelt-Menü in die betroffene logische Farmwelt teleportieren. Der Klick beziehungsweise der vor der Befehlsausführung wiederholte Lock-Check muss den Teleport blockieren; kein Spieler darf während der kritischen Phase zurückkehren. Nach Freigabe des Locks muss derselbe konfigurierte Teleport wieder verfügbar sein. Dabei GUI-Anzeigename, logische ID und tatsächlichen Bukkit-Weltnamen in der Evidenz getrennt notieren.
 
+### Reset-Anzeige im Farmwelt-Menü
+
+Auf dem isolierten Testserver zusätzlich mit einem Spieler prüfen, der nur `farmwelt.use` und keine Admin-Permissions hat:
+
+1. `/farmwelt` öffnen. Bei jeder Welt bleiben die konfigurierten Lore-Zeilen erhalten; darunter stehen der gespeicherte nächste Reset in der Server-Zeitzone, die ungefähre Restzeit und der Klickhinweis. Den Termin als Admin mit `/farmwelt status <welt>` vergleichen. Der Info-Kompass erklärt den Verlust platzierter Blöcke und gelagerter Items und verweist auf die Welt-Items. Darstellung, Lesbarkeit und unveränderte Slots visuell prüfen.
+2. Gezielte Termine auf dem gestoppten Testserver vorbereiten: mehr als eine Stunde, höchstens eine Stunde und höchstens fünf Minuten Restzeit. Nach dem Start und jeweils erneutem Öffnen graue, gelbe beziehungsweise rote Reset-Zeilen prüfen. Unter einer Minute muss `unter 1 Minute` erscheinen. Ein bereits geöffnetes Menü bleibt bewusst eine Momentaufnahme.
+3. Einen fälligen Termin vor Beginn der Pipeline beobachten: `Reset fällig` statt negativer Restzeit. Während eines offenen Resets das Menü erneut öffnen: `Reset läuft` und `Teleport vorübergehend gesperrt` statt Datum und Klickhinweis. Nach erfolgreichem Reset muss erneutes Öffnen den neu persistierten Folgetermin zeigen.
+4. Reset-Konfiguration deaktivieren und reloaden: `Automatischer Reset deaktiviert` auch bei vorhandenem historischem State. Bei einem eigenen GUI-Eintrag ohne Reset-Konfiguration steht `Termin nicht verfügbar`; der konfigurierte Teleport bleibt nutzbar. Nach Wiederaktivierung muss der bestehende Termin erneut erscheinen.
+5. Nur das Reset-Intervall ändern und reloaden: Der angezeigte bestehende Termin bleibt gleich. `notifications.enabled: false` unterdrückt die Menüanzeige nicht. Klick-/Drag-Schutz, Schließen-Item und die zweifache Teleport-Sperre weiterhin prüfen.
+
 ### Reload während laufendem Reset
 
 1. Den Lauf mit einem bekannten Intervall und einer eindeutig erkennbaren Notification-/Post-Reset-Konfiguration beginnen.

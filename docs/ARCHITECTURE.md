@@ -25,6 +25,7 @@ src/main/java/de/minecraftgilde/farmwelt/
 |   +-- FarmworldResetNotificationConfigParser.java
 +-- gui/
 |   +-- FarmweltMenu.java
+|   +-- FarmweltMenuLore.java
 |   +-- FarmweltMenuHolder.java
 |   +-- FarmweltMenuItem.java
 |   +-- TeleportAction.java
@@ -246,6 +247,7 @@ Status, Info, Reload und manueller Reset können auch von der Konsole genutzt we
 Klassen:
 
 - `FarmweltMenu`
+- `FarmweltMenuLore`
 - `FarmweltMenuHolder`
 - `FarmweltMenuItem`
 - `FarmweltGuiListener`
@@ -255,12 +257,16 @@ Ablauf:
 1. Spieler führt `/farmwelt` aus.
 2. `FarmweltCommand` prüft `farmwelt.use`.
 3. `FarmweltMenu.open(player)` erstellt ein Inventory mit 45 Slots.
-4. Farmwelt-Einträge aus der Config werden in den Inhaltsbereich gelegt.
+4. Farmwelt-Einträge aus der Config werden in den Inhaltsbereich gelegt. `FarmweltMenuLore` ergänzt ihre Beschreibungen um den aktuellen Reset-Termin, die Restzeit beziehungsweise den Reset-Status und den passenden Teleport-Hinweis.
 5. Statische Items wie Info- und Schließen-Item werden ergänzt.
 6. `FarmweltGuiListener` bricht Klicks und Drags in der GUI ab, damit Items nicht entnommen werden können.
 7. Klick auf einen Farmwelt-Eintrag ruft `FarmweltTeleportService.teleport(...)` auf.
 
 Die Config-Slots der Farmwelt-Einträge beziehen sich auf den internen Inhaltsbereich mit 27 Slots. Im Inventory wird ein Offset verwendet, damit die Einträge optisch im mittleren Bereich liegen.
+
+`FarmweltMenuLore` erhält den bestehenden `FarmworldResetService`, die `FarmworldAvailabilityService`-Sicht der Reset-Engine, eine `Clock` und die Server-Zeitzone vom Composition Root. Die Zuordnung erfolgt ausschließlich über `FarmweltMenuItem.id()`. Config und State werden gemeinsam unter dem Service-Monitor gelesen, damit kein paralleler Reload die beiden Snapshots vermischt. Ein laufender Reset hat Vorrang vor Zeitplan und deaktivierter oder entfernter Config. Die Anzeige verwendet ausschließlich den veröffentlichten `nextReset`, ohne YAML-Zugriffe, eigene Terminberechnung aus dem Intervall oder mutierende Reset-Aktionen.
+
+Die verbleibende Dauer wird beim Aufbau der Item-Beschreibung mit dem vorhandenen `GermanDurationFormatter` formatiert. Warnfarben gelten bei höchstens einer Stunde (gelb) und höchstens fünf Minuten (rot). Das Menü aktualisiert sich beim erneuten Öffnen; es gibt keinen zusätzlichen periodischen Task. Die bestehenden Folia-Kontexte für Inventory-Zugriffe und beide Reset-Lock-Prüfungen im Teleport-Service bleiben maßgeblich. Der Info-Kompass erläutert den Verlust platzierter Blöcke und gelagerter Items beim Reset.
 
 ## Teleport-Flow
 

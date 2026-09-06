@@ -20,6 +20,7 @@ Das Plugin ist kein Claim- oder allgemeines Anti-Grief-System. GriefPrevention k
 ## Features
 
 - Konfigurierbares 45-Slot-Menü unter `/farmwelt` mit befehlsbasierten Teleports, standardmäßig über BetterRTP.
+- Nächster Reset-Termin und Restzeit direkt bei jeder Farmwelt im Menü, mit Warnfarben und sichtbarem Reset-Status.
 - Ressourcenmonitor mit den Modi `audit`, `warn` und `enforce`, Staff-Meldungen, Claim-Ausnahmen und optionaler Jail-Eskalation.
 - Persistente, automatische Reset-Zeitpläne sowie sichere manuelle Force-Resets für Overworld, Nether und End.
 - Countdown-, Start-, Erfolgs-, optionale Fehler- und persönliche Evakuierungsmeldungen.
@@ -27,6 +28,8 @@ Das Plugin ist kein Claim- oder allgemeines Anti-Grief-System. GriefPrevention k
 - Folia-gerechte Ausführung, Diagnosebefehle und ein echter automatisierter Folia-/Worlds-Smoke-Test.
 
 Die Endfarm unterstützt sowohl einen dragonlosen Zustand mit aktivem Ausgangsportal als auch einen einmaligen frischen Erstkampf über `--dragon`. Die Betriebsdetails stehen im [Admin Guide](docs/ADMIN_GUIDE.md).
+
+Spieler sehen unter `/farmwelt` beim jeweiligen Welt-Item den geplanten Reset in der Server-Zeitzone und die ungefähre Restzeit. Die Anzeige wird bei jedem Öffnen aktualisiert; bei höchstens einer Stunde Restzeit ist sie gelb, bei höchstens fünf Minuten rot. Der Info-Kompass erklärt, dass platzierte Blöcke und gelagerte Items beim Reset verloren gehen. Dafür genügt die bestehende Permission `farmwelt.use`.
 
 ## Voraussetzungen
 
@@ -105,4 +108,4 @@ Die ausgelieferte [`config.yml`](src/main/resources/config.yml) enthält alle ve
 ./gradlew build
 ```
 
-Unter Windows PowerShell entsprechend `./gradlew.bat`. Der Standardbuild erzeugt aktuell `build/libs/Farmwelt-2.0.1-SNAPSHOT.jar`; ein Release-Build erhält seine Version über `-PreleaseVersion=X.Y.Z`.
+Unter Windows PowerShell entsprechend `./gradlew.bat`. Der Standardbuild erzeugt aktuell `build/libs/Farmwelt-2.1.0-SNAPSHOT.jar`; ein Release-Build erhält seine Version über `-PreleaseVersion=X.Y.Z`.

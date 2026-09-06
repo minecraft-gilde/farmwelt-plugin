@@ -2,6 +2,7 @@ package de.minecraftgilde.farmwelt.gui;
 
 import de.minecraftgilde.farmwelt.config.ConfigManager;
 import java.util.List;
+import java.util.Objects;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
@@ -18,9 +19,11 @@ public final class FarmweltMenu {
     private static final int CLOSE_SLOT = 40;
 
     private final ConfigManager configManager;
+    private final FarmweltMenuLore menuLore;
 
-    public FarmweltMenu(ConfigManager configManager) {
-        this.configManager = configManager;
+    public FarmweltMenu(ConfigManager configManager, FarmweltMenuLore menuLore) {
+        this.configManager = Objects.requireNonNull(configManager, "configManager");
+        this.menuLore = Objects.requireNonNull(menuLore, "menuLore");
     }
 
     public void open(Player player) {
@@ -46,10 +49,7 @@ public final class FarmweltMenu {
         }
 
         itemMeta.displayName(Component.text(menuItem.displayName()));
-        List<Component> lore = menuItem.lore().stream()
-                .map(line -> (Component) Component.text(line))
-                .toList();
-        itemMeta.lore(lore);
+        itemMeta.lore(menuLore.forWorld(menuItem));
         itemStack.setItemMeta(itemMeta);
         return itemStack;
     }
@@ -75,7 +75,14 @@ public final class FarmweltMenu {
         meta.displayName(Component.text("Farmwelt-Auswahl", NamedTextColor.GOLD));
         meta.lore(List.of(
                 Component.text("Wähle eine Farmwelt für den", NamedTextColor.GRAY),
-                Component.text("Ressourcenabbau aus.", NamedTextColor.GRAY)
+                Component.text("Ressourcenabbau aus.", NamedTextColor.GRAY),
+                Component.empty(),
+                Component.text("Farmwelten werden regelmäßig erneuert.", NamedTextColor.YELLOW),
+                Component.text("Dabei gehen dort platzierte Blöcke", NamedTextColor.GRAY),
+                Component.text("und gelagerte Items verloren.", NamedTextColor.GRAY),
+                Component.empty(),
+                Component.text("Den nächsten Reset-Termin findest du", NamedTextColor.GRAY),
+                Component.text("bei der jeweiligen Welt.", NamedTextColor.GRAY)
         ));
         itemStack.setItemMeta(meta);
         return itemStack;

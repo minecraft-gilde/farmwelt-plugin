@@ -81,11 +81,33 @@ Pfad: `farmworlds.<id>`
 | `display-name` | je ID gesetzt | Erforderlicher Anzeigename des GUI-Eintrags; wird auch für Reset-Nachrichten verwendet. |
 | `icon` | je ID gesetzt | Bukkit-`Material`, das ein Item sein muss. |
 | `slot` | `11`, `13`, `15` | Inhalts-Slot `0` bis `26`; das Menü selbst hat 45 Slots. |
-| `lore` | je ID gesetzt | Optionale String-Liste unter dem Icon. |
+| `lore` | je ID gesetzt | Optionale String-Liste unter dem Icon; Reset-Anzeige und Teleport-Hinweis werden automatisch darunter ergänzt. |
 | `reset` | je ID gesetzt | Reset-Plan; siehe nächster Abschnitt. |
 | `teleport` | je ID gesetzt | Befehlsbasierte Teleportaktion. |
 
 Ein aktivierter GUI-Eintrag ohne gültigen Anzeigenamen, Item-Icon, Inhalts-Slot oder Teleportbefehl wird beim Laden übersprungen. GUI-Einträge dürfen eigene IDs haben; Reset-Pläne werden dagegen nur für `overworld`, `nether` und `end` geladen.
+
+Beim Öffnen von `/farmwelt` erhält jedes Welt-Item unter seiner konfigurierten Beschreibung den veröffentlichten nächsten Reset-Termin und die ungefähre Restzeit, beispielsweise:
+
+```text
+Nächster Reset: 09.09.2026, 18:00 Uhr
+Verbleibend: ca. 3 Tage, 4 Stunden
+
+Klicken zum Teleportieren
+```
+
+Datum und Uhrzeit verwenden dieselbe Server-Zeitzone wie `/farmwelt status` und die Reset-Nachrichten. Der Termin stammt aus dem gespeicherten Zeitplan; eine Intervalländerung beim Reload verschiebt ihn nicht. Es ist der geplante Termin, den der Scheduler im 60-Sekunden-Takt prüft. Ein geöffnetes Menü bleibt eine Momentaufnahme; erneutes Öffnen aktualisiert Datum, Restzeit und Status. Die Anzeige benötigt nur `farmwelt.use`, keine Admin-Permission und keine zusätzlichen Config-Schlüssel. Sie ist auch bei ausgeschalteten Reset-Notifications sichtbar.
+
+Die beiden Reset-Zeilen sind normalerweise grau, bei höchstens einer Stunde Restzeit gelb und bei höchstens fünf Minuten rot. Unter einer Minute steht `Verbleibend: unter 1 Minute`. Sonderzustände ersetzen Datum und Restzeit:
+
+| Zustand | Anzeige |
+| --- | --- |
+| Reset läuft, auch nach zwischenzeitlicher Deaktivierung beim Reload | `Reset läuft` und `Teleport vorübergehend gesperrt`; kein Klickhinweis. |
+| Termin erreicht oder überschritten, Reset läuft noch nicht | `Reset fällig`; die bestehende Teleport-Sperre greift erst bei einem laufenden Reset. |
+| Reset-Konfiguration deaktiviert | `Automatischer Reset deaktiviert`; ein historischer Termin wird nicht angeboten. |
+| Kein nutzbarer Zeitplan, etwa bei eigener GUI-ID ohne Reset-Konfiguration | `Termin nicht verfügbar`. |
+
+Der Info-Kompass erklärt zusätzlich, dass beim Erneuern der Farmwelten dort platzierte Blöcke und gelagerte Items verloren gehen, und verweist auf den Termin beim jeweiligen Welt-Item.
 
 ### Reset-Plan
 

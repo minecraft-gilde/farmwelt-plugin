@@ -5,6 +5,7 @@ import de.minecraftgilde.farmwelt.command.FarmweltAdminCommandHandler;
 import de.minecraftgilde.farmwelt.command.FarmworldStatusFormatter;
 import de.minecraftgilde.farmwelt.config.ConfigManager;
 import de.minecraftgilde.farmwelt.gui.FarmweltMenu;
+import de.minecraftgilde.farmwelt.gui.FarmweltMenuLore;
 import de.minecraftgilde.farmwelt.listener.FarmweltGuiListener;
 import de.minecraftgilde.farmwelt.listener.ResourceBreakListener;
 import de.minecraftgilde.farmwelt.reset.AutomaticResetScheduler;
@@ -110,7 +111,12 @@ public final class FarmweltPlugin extends JavaPlugin {
                 getLogger()
         );
 
-        farmweltMenu = new FarmweltMenu(configManager);
+        farmweltMenu = new FarmweltMenu(configManager, new FarmweltMenuLore(
+                resetService,
+                resetEngine,
+                Clock.systemUTC(),
+                ZoneId.systemDefault()
+        ));
         teleportService = new FarmweltTeleportService(this, resetEngine);
         claimProtectionService = new ClaimProtectionService(this);
         resourceDetectionService = new ResourceDetectionService(configManager);
